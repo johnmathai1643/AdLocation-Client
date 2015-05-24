@@ -1,16 +1,15 @@
 package com.example.john.locationads;
 
 import android.annotation.TargetApi;
-import android.app.ActionBar;
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.content.IntentSender;
 import android.content.res.Configuration;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -21,11 +20,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.data.DataBufferObserverSet;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -40,7 +37,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
@@ -51,12 +48,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 
 public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,LocationListener {
 
-    static LatLng CurLocation,AdLocation = null;
+    static LatLng CurLocation;
 
     private GoogleApiClient mGoogleApiClient;
     public static final String TAG = MainActivity.class.getSimpleName();
@@ -69,6 +65,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
+    public static JSONArray dataFromAsyncTask;
+    private ProgressDialog dialog;
+    private Location location_current;
+    private Handler h;
 
     /** map fragment **/
     private GoogleMap map;
@@ -147,11 +147,11 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         }
         else {
             handleNewLocation(location);
+            location_current = location;
         };
 
     }
-
-    private void handleNewLocation(Location location) {
+        private void handleNewLocation(Location location) {
         Log.d(TAG, location.toString());
         double currentLatitude = location.getLatitude();
         double currentLongitude = location.getLongitude();
@@ -160,8 +160,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 15));
         map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
 
-        new LocationTasker(location).execute();
-
+        AsyncTask<Void, Void, Void> LocationTasker_object;
+        LocationTasker_object = new LocationTasker(location).execute();
     }
 
     @Override
@@ -208,10 +208,32 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                   handleNewLocation(location);
                 break;
             case 1:
-                AdLocation = new LatLng(13.033, 80.166);
-                Marker AdLocationmarker = map.addMarker(new MarkerOptions().position(AdLocation).title("Ad Location").snippet("This is your location"));
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(AdLocation, 15));
-                map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+                if (dataFromAsyncTask==null){
+                    dialog = ProgressDialog.show(MainActivity.this,"Get Locations", "Please wait...");
+                    h = new Handler(){
+                        @Override
+                        public void handleMessage(Message msg){
+                          super.handleMessage(msg);
+                            dialog.dismiss();
+                            output_ad_locations(dataFromAsyncTask);
+                        }
+                    };
+
+                    Thread th = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try{
+                                get_ad_location_sync();
+                                h.sendEmptyMessage(0);
+                            }
+                            catch (Exception e){
+                                e.printStackTrace();
+                            }
+                    } });
+                    th.start();
+                 }
+                else
+                  output_ad_locations(dataFromAsyncTask);
                 break;
            default:
                break;
@@ -230,7 +252,64 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 //           Log.e("MainActivity", "Error in creating fragment");
     }
 
- /** for sync on navigation drawer actions and animations **/
+    protected void output_ad_locations(JSONArray jsonArray){
+        try {
+            for (int i = 0; i<jsonArray.length();i++) {
+                JSONObject adlocation = jsonArray.getJSONObject(i);
+                map.addMarker(new MarkerOptions()
+                                .title(adlocation.getString("name"))
+                                .snippet(adlocation.getString("snippet"))
+                                .position(new LatLng(Double.parseDouble(adlocation.getString("lat")), Double.parseDouble(adlocation.getString("lon"))))
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                );
+            }
+            dataFromAsyncTask = null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JSONObject get_ad_location_sync(){
+        String jsonstring;
+        double currentLatitude = location_current.getLatitude();
+        double currentLongitude = location_current.getLongitude();
+
+        String data_to_send = "lat="+String.valueOf(currentLatitude)+"&lon="+String.valueOf(currentLongitude);
+        DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+        if (dataFromAsyncTask == null)
+        {   HttpGet httpget = new HttpGet("http://stark-lake-4080.herokuapp.com/api/ads_manager?"+data_to_send);
+            Log.i(TAG,"http://stark-lake-4080.herokuapp.com/api/ads_manager?"+data_to_send);
+            httpget.setHeader("Content-type", "application/json");
+            InputStream inputstream = null;
+            try {
+                HttpResponse response = httpclient.execute(httpget);
+                HttpEntity entity = response.getEntity();
+                inputstream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream,"UTF-8"),8);
+                StringBuilder sb = new StringBuilder();
+                String line = null;
+                while((line = reader.readLine())!=null){
+                    sb.append(line + "\n");
+                }
+                jsonstring = sb.toString();
+                JSONObject jObject = new JSONObject(jsonstring);
+                Log.i(TAG,jsonstring);
+
+                JSONArray jArray = jObject.getJSONArray("adlocation");
+                dataFromAsyncTask = jArray;
+
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    /** for sync on navigation drawer actions and animations **/
     private void setupDrawer() {
         mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
