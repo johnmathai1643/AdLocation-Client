@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -50,8 +51,7 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
     int CASE_NUM = 0;
 
     private LocationProvider mLocationProvider;
-
-
+    private NetworkConnection mNetworkConnection;
     public Map_Fragment(int i){
          CASE_NUM = i;
     }
@@ -73,6 +73,8 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
         MapsInitializer.initialize(this.getActivity());
 
         mLocationProvider = new LocationProvider(getActivity(), this);
+        mNetworkConnection = new NetworkConnection(getActivity());
+
         choose_map(CASE_NUM);
 
         return view;
@@ -85,32 +87,36 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
                 handleNewLocation(LOCATION_CURRENT);
                 break;
             case 1:
-                if (dataFromAsyncTask==null){
-                    dialog = ProgressDialog.show(getActivity(), "Get Locations", "Please wait...");
-                    h = new Handler(){
-                        @Override
-                        public void handleMessage(Message msg){
-                            super.handleMessage(msg);
-                            dialog.dismiss();
-                            output_ad_locations(dataFromAsyncTask);
-                        }
-                    };
+                if(mNetworkConnection.internet_connection()) {
+                    if (dataFromAsyncTask == null) {
+                        dialog = ProgressDialog.show(getActivity(), "Getting Locations", "Please wait...");
+                        dialog.setCancelable(true);
+                        h = new Handler() {
+                            @Override
+                            public void handleMessage(Message msg) {
+                                super.handleMessage(msg);
+                                dialog.dismiss();
+                                output_ad_locations(dataFromAsyncTask);
+                            }
+                        };
 
-                    Thread th = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try{
-                                get_ad_location_sync();
-                                h.sendEmptyMessage(0);
+                        Thread th = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    get_ad_location_sync();
+                                    h.sendEmptyMessage(0);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
-                            catch (Exception e){
-                                e.printStackTrace();
-                            }
-                        } });
-                    th.start();
+                        });
+                        th.start();
+                    } else
+                        output_ad_locations(dataFromAsyncTask);
                 }
                 else
-                    output_ad_locations(dataFromAsyncTask);
+                    Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
                 break;
             default:
                 break;
@@ -165,42 +171,48 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
     }
 
     private JSONObject get_ad_location_sync(){
-        String jsonstring;
-        double currentLatitude = LOCATION_CURRENT.getLatitude();
-        double currentLongitude = LOCATION_CURRENT.getLongitude();
+       if(mNetworkConnection.internet_connection()) {
+           String jsonstring;
+           double currentLatitude = LOCATION_CURRENT.getLatitude();
+           double currentLongitude = LOCATION_CURRENT.getLongitude();
 
-        String data_to_send = "lat="+String.valueOf(currentLatitude)+"&lon="+String.valueOf(currentLongitude);
-        DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
-        if (dataFromAsyncTask == null)
-        {   HttpGet httpget = new HttpGet("http://stark-lake-4080.herokuapp.com/api/ads_manager?"+data_to_send);
-            Log.i(TAG,"http://stark-lake-4080.herokuapp.com/api/ads_manager?"+data_to_send);
-            httpget.setHeader("Content-type", "application/json");
-            InputStream inputstream = null;
-            try {
-                HttpResponse response = httpclient.execute(httpget);
-                HttpEntity entity = response.getEntity();
-                inputstream = entity.getContent();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream,"UTF-8"),8);
-                StringBuilder sb = new StringBuilder();
-                String line = null;
-                while((line = reader.readLine())!=null){
-                    sb.append(line + "\n");
-                }
-                jsonstring = sb.toString();
-                JSONObject jObject = new JSONObject(jsonstring);
-                Log.i(TAG,jsonstring);
+           String data_to_send = "lat=" + String.valueOf(currentLatitude) + "&lon=" + String.valueOf(currentLongitude);
+           DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+           if (dataFromAsyncTask == null) {
+               HttpGet httpget = new HttpGet("http://stark-lake-4080.herokuapp.com/api/ads_manager?" + data_to_send);
+               Log.i(TAG, "http://stark-lake-4080.herokuapp.com/api/ads_manager?" + data_to_send);
+               httpget.setHeader("Content-type", "application/json");
+               InputStream inputstream = null;
+               try {
+                   HttpResponse response = httpclient.execute(httpget);
+                   HttpEntity entity = response.getEntity();
+                   inputstream = entity.getContent();
+                   BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream, "UTF-8"), 8);
+                   StringBuilder sb = new StringBuilder();
+                   String line = null;
+                   while ((line = reader.readLine()) != null) {
+                       sb.append(line + "\n");
+                   }
+                   jsonstring = sb.toString();
+                   JSONObject jObject = new JSONObject(jsonstring);
+                   Log.i(TAG, jsonstring);
 
-                JSONArray jArray = jObject.getJSONArray("adlocation");
-                dataFromAsyncTask = jArray;
+                   JSONArray jArray = jObject.getJSONArray("adlocation");
+                   dataFromAsyncTask = jArray;
 
-            } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
+               } catch (ClientProtocolException e) {
+                   e.printStackTrace();
+               } catch (IOException e) {
+                   e.printStackTrace();
+               } catch (JSONException e) {
+                   e.printStackTrace();
+               }
+           }
+       }
+       else{
+           Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
+       }
+
         return null;
     }
 
@@ -213,10 +225,12 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 15));
         map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
 
-        LOCATION_CURRENT = location;
+        if(mNetworkConnection.internet_connection()){
+           AsyncTask<Void, Void, Void> LocationTasker_object;
+           LocationTasker_object = new LocationTasker(location).execute();}
+        else
+           Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
 
-        AsyncTask<Void, Void, Void> LocationTasker_object;
-        LocationTasker_object = new LocationTasker(location).execute();
     }
 
 }
