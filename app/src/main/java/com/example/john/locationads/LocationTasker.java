@@ -72,7 +72,7 @@ public class LocationTasker extends AsyncTask<Void,Void,Void> {
     @Override
         protected void onPostExecute(Void aVoid) {
 //            super.onPostExecute(aVoid);
-        MainActivity.dataFromAsyncTask = returned_locations;
+        Map_Fragment.dataFromAsyncTask = returned_locations;
     }
 
 }
