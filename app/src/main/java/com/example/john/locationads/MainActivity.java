@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.Configuration;
 import android.location.Location;
@@ -66,11 +67,8 @@ public class MainActivity extends ActionBarActivity {
                 return;
             }
 
-            Fragment fragment = new Map_Fragment(99);
-            Bundle data = new Bundle();
-            fragment.setArguments(data);
-            FragmentManager fragmentManager = getFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+            create_fragments(new Map_Fragment(100));
+            startService(new Intent(this,NotificationService.class));
 
             /** navigational drawer **/
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -125,40 +123,32 @@ public class MainActivity extends ActionBarActivity {
 
     private void selectItem(int position) {
 
-        Fragment fragment = null;
-
         switch (position) {
             case 0:
-                fragment = new Map_Fragment(0);
+                create_fragments(new Map_Fragment(0));
                 break;
             case 1:
-                 fragment = new Map_Fragment(1);
+                create_fragments(new Map_Fragment(1));
                 break;
             case 2:
-                fragment = new SettingsFragment();
+                create_fragments(new SettingsFragment(this));
                 break;
            default:
                break;
            }
 
-        if (fragment != null) {
-            Bundle data = new Bundle();
-            fragment.setArguments(data);
-            FragmentManager fragmentManager = getFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+        mDrawerList.setItemChecked(position, true);
+        mDrawerList.setSelection(position);
+        setTitle(osArray[position]);
+        mDrawerLayout.closeDrawer(mDrawerList);
 
-            mDrawerList.setItemChecked(position, true);
-            mDrawerList.setSelection(position);
-            setTitle(osArray[position]);
-            mDrawerLayout.closeDrawer(mDrawerList);
-            }
-        else{
-            mDrawerList.setItemChecked(position, true);
-            mDrawerList.setSelection(position);
-            setTitle(osArray[position]);
-            mDrawerLayout.closeDrawer(mDrawerList);
-        }
+    }
 
+    private void create_fragments(Fragment fragment){
+        Bundle data = new Bundle();
+        fragment.setArguments(data);
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
     }
 
     /** for sync on navigation drawer actions and animations **/

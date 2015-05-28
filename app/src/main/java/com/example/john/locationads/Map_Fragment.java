@@ -2,6 +2,7 @@ package com.example.john.locationads;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -74,6 +75,8 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
 
         mLocationProvider = new LocationProvider(getActivity(), this);
         mNetworkConnection = new NetworkConnection(getActivity());
+
+/** start service implement later **/
 
         choose_map(CASE_NUM);
 

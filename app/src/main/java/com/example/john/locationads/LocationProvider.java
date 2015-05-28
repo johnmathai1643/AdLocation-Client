@@ -13,10 +13,13 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+
 public class LocationProvider implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
+
+
 
     public abstract interface LocationCallback {
         public void handleNewLocation(Location location);
@@ -34,6 +37,8 @@ public class LocationProvider implements
     private Context mContext;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
+
+    static public Location CURRENT_LOCATION_FROM_PROVIDER;
 
     public LocationProvider(Context context, LocationCallback callback) {
         mGoogleApiClient = new GoogleApiClient.Builder(context)
@@ -74,6 +79,8 @@ public class LocationProvider implements
         }
         else {
             Map_Fragment.LOCATION_CURRENT = location;
+//            NotificationService.LOCATION_CURRENT = location;
+            CURRENT_LOCATION_FROM_PROVIDER = location;
             mLocationCallback.handleNewLocation(location);
         }
     }
