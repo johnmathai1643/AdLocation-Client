@@ -51,12 +51,12 @@
     </PreferenceCategory>
 
     <Preference
-        android:title="Intent"
-        android:summary="Open a webpage">
+        android:title="Administrator"
+        android:summary="Open Admin panel">
 
         <intent
             android:action="android.intent.action.VIEW"
-            android:data="http://android-elements.blogspot.com/" />
+            android:data="http://stark-lake-4080.herokuapp.com/" />
 
     </Preference>
 

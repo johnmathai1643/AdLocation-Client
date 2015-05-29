@@ -61,23 +61,7 @@ public class SettingsFragment extends PreferenceFragment {
         editor.putBoolean("notification_switch",value);
         editor.commit();
         notification_switch.setSummary(value == false ? "Disabled" : "Enabled");
-//        Toast.makeText(context, value.toString(), LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        try {
-            Field childFragmentManager = Fragment.class.getDeclaredField("mChildFragmentManager");
-            childFragmentManager.setAccessible(true);
-            childFragmentManager.set(this, null);
-
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        Toast.makeText(context, value.toString(), LENGTH_SHORT).show();
     }
 
 }

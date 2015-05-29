@@ -1,7 +1,9 @@
 package com.example.john.locationads;
 
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.AsyncTask;
@@ -38,7 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class Map_Fragment extends Fragment implements LocationProvider.LocationCallback {
+public class Map_Fragment extends Fragment implements LocationProvider.LocationCallback,GoogleMap.OnMarkerDragListener {
 
     public static JSONArray dataFromAsyncTask;
     public static Location LOCATION_CURRENT;
@@ -48,6 +50,7 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
     static LatLng CurLocation;
     private ProgressDialog dialog;
     private Handler h;
+    boolean markerClicked;
 
     int CASE_NUM = 0;
 
@@ -72,6 +75,7 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
 
         // Needs to call MapsInitializer before doing any CameraUpdateFactory calls
         MapsInitializer.initialize(this.getActivity());
+        map.setOnMarkerDragListener(this);
 
         mLocationProvider = new LocationProvider(getActivity(), this);
         mNetworkConnection = new NetworkConnection(getActivity());
@@ -161,7 +165,7 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
                                 .snippet(adlocation.getString("snippet"))
                                 .position(new LatLng(Double.parseDouble(adlocation.getString("lat")), Double.parseDouble(adlocation.getString("lon"))))
                                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                );
+                ).setDraggable(true);
             }
 
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 15));
@@ -235,5 +239,29 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
            Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
 
     }
+
+    private void create_fragments(Fragment fragment){
+        Bundle data = new Bundle();
+        fragment.setArguments(data);
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+    }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+        Toast.makeText(getActivity(),marker.getSnippet().toString(),Toast.LENGTH_LONG).show();
+        create_fragments(new Ad_Fragment(marker));
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+
+    }
+
 
 }
