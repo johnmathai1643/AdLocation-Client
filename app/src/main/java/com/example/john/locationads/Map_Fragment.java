@@ -10,6 +10,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -168,8 +170,8 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
                 ).setDraggable(true);
             }
 
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 15));
-            map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 12));
+            map.animateCamera(CameraUpdateFactory.zoomTo(12), 2000, null);
             dataFromAsyncTask = null;
 
         } catch (JSONException e) {
@@ -229,8 +231,8 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
         double currentLongitude = location.getLongitude();
         CurLocation = new LatLng(currentLatitude, currentLongitude);
         Marker MyLocation = map.addMarker(new MarkerOptions().position(CurLocation).title("Current Location").snippet("This is your location"));
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 15));
-        map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 12));
+        map.animateCamera(CameraUpdateFactory.zoomTo(12), 2000, null);
 
         if(mNetworkConnection.internet_connection()){
            AsyncTask<Void, Void, Void> LocationTasker_object;
@@ -240,17 +242,19 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
 
     }
 
-    private void create_fragments(Fragment fragment){
-        Bundle data = new Bundle();
-        fragment.setArguments(data);
+    private void create_fragments(Fragment fragment,Marker ad_marker){
+        Bundle bundle = new Bundle();
+        bundle.putParcelable("MARKER", new MarkerParcelable(ad_marker));
+        fragment.setArguments(bundle);
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+        fragmentManager.beginTransaction().addToBackStack(null);
     }
 
     @Override
     public void onMarkerDragStart(Marker marker) {
         Toast.makeText(getActivity(),marker.getSnippet().toString(),Toast.LENGTH_LONG).show();
-        create_fragments(new Ad_Fragment(marker));
+        create_fragments(new Ad_Fragment(),marker);
     }
 
     @Override
