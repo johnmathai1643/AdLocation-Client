@@ -42,7 +42,7 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
 
         // 3. build jsonObject
         JSONObject user_params = new JSONObject();
-        String email = "joh1993@gmail.com";
+        String email = "johnn1993@gmail.com";
         String password = "123456789";
         try {
             user_params.put("email", email);
@@ -85,8 +85,9 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
             jsonstring = sb.toString();
 
                 JSONObject jObject = new JSONObject(jsonstring);
-                JSONObject userDetails = jObject.getJSONObject("user");
+                JSONObject userDetails = jObject.getJSONObject("data");
 
+                Log.i(TAG,jObject.toString());
                 Log.i(TAG,userDetails.toString());
 
 
