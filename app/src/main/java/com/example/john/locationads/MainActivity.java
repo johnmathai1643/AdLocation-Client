@@ -1,6 +1,7 @@
 package com.example.john.locationads;
 
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
@@ -22,7 +23,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -46,15 +50,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+
 public class MainActivity extends ActionBarActivity {
 
     public static final String TAG = MainActivity.class.getSimpleName();
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
-    private String[] osArray =  { "Current Location", "Ad Location", "Settings", "Recent", "Exit" };
+    private String[] osArray =  { "Current Location", "Ad Location", "Settings", "Login", "Exit" };
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
+
+    public String AUTH_TOKEN;
+    public String EMAIL_ID;
+    public String CURRENT_USER;
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
@@ -133,6 +142,9 @@ public class MainActivity extends ActionBarActivity {
             case 2:
                 create_fragments(new SettingsFragment(this));
                 break;
+            case 3:
+                create_login_dialog();
+                break;
            default:
                break;
            }
@@ -141,6 +153,55 @@ public class MainActivity extends ActionBarActivity {
         mDrawerList.setSelection(position);
         setTitle(osArray[position]);
         mDrawerLayout.closeDrawer(mDrawerList);
+
+    }
+
+    private void create_login_dialog() {
+
+        // Create Object of Dialog class
+        final Dialog login = new Dialog(this);
+        // Set GUI of login screen
+        login.setContentView(R.layout.login_dialog);
+        login.setTitle("Login to Pulse 7");
+
+        // Init button of login GUI
+        Button btnLogin = (Button) login.findViewById(R.id.btnLogin);
+        Button btnCancel = (Button) login.findViewById(R.id.btnCancel);
+        final EditText txtUsername = (EditText)login.findViewById(R.id.txtEmail);
+        final EditText txtPassword = (EditText)login.findViewById(R.id.txtPassword);
+
+        // Attached listener for login GUI button
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(txtUsername.getText().toString().trim().length() > 0 && txtPassword.getText().toString().trim().length() > 0)
+                {
+                    // Validate Your login credential here than display message
+                    Toast.makeText(MainActivity.this,
+                            "Login Successful", Toast.LENGTH_LONG).show();
+
+                        AsyncTask<Void, Void, Void> AuthenticatorTasker_object;
+                    AuthenticatorTasker_object = new AuthenticatorTasker().execute();
+
+                    // Redirect to dashboard / home screen.
+                    login.dismiss();
+                }
+                else
+                {
+                    Toast.makeText(MainActivity.this,
+                            "Please enter Username and Password", Toast.LENGTH_LONG).show();
+
+                }
+            }
+        });
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                login.dismiss();
+            }
+        });
+
+        login.show();
 
     }
 
