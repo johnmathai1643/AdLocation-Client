@@ -38,8 +38,8 @@ public class LocationTasker extends AsyncTask<Void,Void,Void> {
         protected Void doInBackground(Void... params) {
             String data_to_send = "lat="+String.valueOf(currentLatitude)+"&lon="+String.valueOf(currentLongitude);
             DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
-            HttpGet httppost = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/ads_manager?"+data_to_send);
-            Log.i(TAG,"http://http://stormy-brook-6865.herokuapp.com/api/ads_manager?"+data_to_send);
+            HttpGet httppost = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?"+data_to_send);
+            Log.i(TAG,"http://http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?"+data_to_send);
             httppost.setHeader("Content-type", "application/json");
             InputStream inputstream = null;
             try {

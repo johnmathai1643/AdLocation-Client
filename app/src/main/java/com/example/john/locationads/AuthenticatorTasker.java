@@ -1,7 +1,13 @@
 package com.example.john.locationads;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.provider.Settings;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -10,7 +16,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,14 +29,24 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
 
     private static final String TAG = AuthenticatorTasker.class.getName();
     private String jsonstring = " ";
+    private String email,password,username;
+    private Dialog login;
+    private ProgressDialog dialog;
+    private Context context;
+    private MainActivity activity;
 
-    public AuthenticatorTasker(){
-
+    public AuthenticatorTasker(String email, String password, String username, Dialog login, Context context, MainActivity activity){
+        this.email = email;
+        this.password = password;
+        this.username = username;
+        this.login = login;
+        this.activity = activity;
+        this.dialog = new ProgressDialog(context);
     }
 
     @Override
     protected void onPreExecute(){
-
+//        this.dialog.show(activity, "Registering", "Please wait...");
     }
 
     @Override
@@ -40,14 +55,11 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
         HttpPost httppost = new HttpPost("http://stormy-brook-6865.herokuapp.com/users.json");
         Log.i(TAG, "http://stormy-brook-6865.herokuapp.com/users.json");
 
-        // 3. build jsonObject
         JSONObject user_params = new JSONObject();
-        String email = "johnn1993@gmail.com";
-        String password = "123456789";
         try {
             user_params.put("email", email);
             user_params.put("password", password);
-
+            user_params.put("username", username);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -87,8 +99,9 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
                 JSONObject jObject = new JSONObject(jsonstring);
                 JSONObject userDetails = jObject.getJSONObject("data");
 
-                Log.i(TAG,jObject.toString());
                 Log.i(TAG,userDetails.toString());
+
+                get_auth_token(userDetails);
 
 
         } catch (ClientProtocolException e) {
@@ -103,7 +116,27 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
 
     @Override
     protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+//        if (this.dialog.isShowing())
+//            this.dialog.dismiss();
+//        this.dialog.setCancelable(true);
+
+        Toast.makeText(activity, "Register Successful", Toast.LENGTH_SHORT).show();
+        this.login.dismiss();
+    }
+
+    protected void get_auth_token(JSONObject userdetails) throws JSONException {
+        GlobalVar.setUserToken(userdetails.getString("authentication_token"));
+        GlobalVar.setUserName(userdetails.getString("username"));
+        GlobalVar.setUserEmail(userdetails.getString("email"));
+
+        SharedPreferences settings_sp = context.getSharedPreferences(GlobalVar.getSharedPreferenceName(), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings_sp.edit();
+        editor.putString("USERNAME", GlobalVar.getUserName());
+        editor.putString("EMAIL", GlobalVar.getUserEmail());
+        editor.putString("AUTH_TOKEN", GlobalVar.getUserToken());
+        editor.commit();
+
+        Log.i(TAG, GlobalVar.getUserToken());
     }
 
 }

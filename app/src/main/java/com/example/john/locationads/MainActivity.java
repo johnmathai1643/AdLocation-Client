@@ -4,16 +4,12 @@ import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.res.Configuration;
-import android.location.Location;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -27,28 +23,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -162,35 +136,31 @@ public class MainActivity extends ActionBarActivity {
         final Dialog login = new Dialog(this);
         // Set GUI of login screen
         login.setContentView(R.layout.login_dialog);
-        login.setTitle("Login to Pulse 7");
+        login.getWindow().setBackgroundDrawable(new ColorDrawable(android.R.color.transparent));
 
         // Init button of login GUI
         Button btnLogin = (Button) login.findViewById(R.id.btnLogin);
         Button btnCancel = (Button) login.findViewById(R.id.btnCancel);
-        final EditText txtUsername = (EditText)login.findViewById(R.id.txtEmail);
+        final EditText txtEmail = (EditText)login.findViewById(R.id.txtEmail);
         final EditText txtPassword = (EditText)login.findViewById(R.id.txtPassword);
+        final EditText txtUsername = (EditText)login.findViewById(R.id.txtUsername);
 
         // Attached listener for login GUI button
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(txtUsername.getText().toString().trim().length() > 0 && txtPassword.getText().toString().trim().length() > 0)
+                if(txtEmail.getText().toString().trim().length() > 0 && txtPassword.getText().toString().trim().length() > 0)
                 {
-                    // Validate Your login credential here than display message
-                    Toast.makeText(MainActivity.this,
-                            "Login Successful", Toast.LENGTH_LONG).show();
+                    String email = txtEmail.getText().toString();
+                    String password = txtPassword.getText().toString();
+                    String username = txtUsername.getText().toString();
 
-                        AsyncTask<Void, Void, Void> AuthenticatorTasker_object;
-                    AuthenticatorTasker_object = new AuthenticatorTasker().execute();
-
-                    // Redirect to dashboard / home screen.
-                    login.dismiss();
+                    AsyncTask<Void, Void, Void> AuthenticatorTasker_object;
+                    AuthenticatorTasker_object = new AuthenticatorTasker(email,password,username,login,getApplicationContext(),MainActivity.this).execute();
                 }
                 else
                 {
-                    Toast.makeText(MainActivity.this,
-                            "Please enter Username and Password", Toast.LENGTH_LONG).show();
-
+                    Toast.makeText(MainActivity.this, "Enter Email and Password", Toast.LENGTH_LONG).show();
                 }
             }
         });

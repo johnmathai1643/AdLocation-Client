@@ -1,6 +1,5 @@
 package com.example.john.locationads;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -8,13 +7,8 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
-import android.widget.CompoundButton;
-import android.widget.Switch;
 import android.widget.Toast;
 
-import java.lang.reflect.Field;
-
-import static android.content.Context.*;
 import static android.widget.Toast.LENGTH_SHORT;
 
 public class SettingsFragment extends PreferenceFragment {
@@ -56,7 +50,7 @@ public class SettingsFragment extends PreferenceFragment {
     } /** create **/
 
     protected void set_switch_preference(Boolean value){
-        SharedPreferences settings_pref = context.getSharedPreferences(SHAREDPREF_SETTINGS, context.MODE_PRIVATE);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        SharedPreferences settings_pref = context.getSharedPreferences(SHAREDPREF_SETTINGS, context.MODE_PRIVATE);
         SharedPreferences.Editor editor = settings_pref.edit();
         editor.putBoolean("notification_switch",value);
         editor.commit();
