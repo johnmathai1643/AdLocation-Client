@@ -36,37 +36,45 @@ public class LocationTasker extends AsyncTask<Void,Void,Void> {
         public JSONArray returned_locations;
         @Override
         protected Void doInBackground(Void... params) {
-            String data_to_send = "lat="+String.valueOf(currentLatitude)+"&lon="+String.valueOf(currentLongitude);
-            DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
-            HttpGet httppost = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?"+data_to_send);
-            Log.i(TAG,"http://http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?"+data_to_send);
-            httppost.setHeader("Content-type", "application/json");
-            InputStream inputstream = null;
-            try {
-                HttpResponse response = httpclient.execute(httppost);
-                HttpEntity entity = response.getEntity();
-                inputstream = entity.getContent();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream,"UTF-8"),8);
-                StringBuilder sb = new StringBuilder();
-                String line = null;
-                while((line = reader.readLine())!=null){
-                    sb.append(line + "\n");
+            if(GlobalVar.getUserEmail()!=null && GlobalVar.getUserToken()!=null) {
+                String data_to_send = "lat=" + String.valueOf(currentLatitude) + "&lon=" + String.valueOf(currentLongitude);
+                DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+                HttpGet httpget = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
+                Log.i(TAG, "http://http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
+
+                httpget.setHeader("Content-type", "application/json");
+                httpget.addHeader("X-User-Email", GlobalVar.getUserEmail());
+                httpget.addHeader("X-User-Token", GlobalVar.getUserToken());
+
+                InputStream inputstream = null;
+                try {
+                    HttpResponse response = httpclient.execute(httpget);
+                    HttpEntity entity = response.getEntity();
+                    inputstream = entity.getContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream, "UTF-8"), 8);
+                    StringBuilder sb = new StringBuilder();
+                    String line = null;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line + "\n");
+                    }
+                    jsonstring = sb.toString();
+                    JSONObject jObject = new JSONObject(jsonstring);
+                    Log.i(TAG, jsonstring);
+
+                    JSONArray jArray = jObject.getJSONArray("adlocation");
+                    returned_locations = jArray;
+
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-                jsonstring = sb.toString();
-                JSONObject jObject = new JSONObject(jsonstring);
-                Log.i(TAG,jsonstring);
-
-                JSONArray jArray = jObject.getJSONArray("adlocation");
-                returned_locations = jArray;
-
-            } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
+                return null;
             }
-            return null;
+            else
+                return null;
         }
 
     @Override

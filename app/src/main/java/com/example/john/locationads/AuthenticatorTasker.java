@@ -34,6 +34,7 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
     private ProgressDialog dialog;
     private Context context;
     private MainActivity activity;
+    private String URL;
 
     public AuthenticatorTasker(String email, String password, String username, Dialog login, Context context, MainActivity activity){
         this.email = email;
@@ -42,24 +43,23 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
         this.login = login;
         this.activity = activity;
         this.dialog = new ProgressDialog(context);
+        this.URL = "http://stormy-brook-6865.herokuapp.com/users.json";
     }
 
-    @Override
-    protected void onPreExecute(){
-//        this.dialog.show(activity, "Registering", "Please wait...");
+    public AuthenticatorTasker(String password, String username, Dialog login, Context context, MainActivity activity){
+        this.password = password;
+        this.username = username;
+        this.login = login;
+        this.activity = activity;
+        this.dialog = new ProgressDialog(context);
     }
 
-    @Override
-    protected Void doInBackground(Void... params) {
-        DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
-        HttpPost httppost = new HttpPost("http://stormy-brook-6865.herokuapp.com/users.json");
-        Log.i(TAG, "http://stormy-brook-6865.herokuapp.com/users.json");
-
+    protected String createJsonString(){
         JSONObject user_params = new JSONObject();
         try {
+            user_params.put("username", username);
             user_params.put("email", email);
             user_params.put("password", password);
-            user_params.put("username", username);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -71,18 +71,30 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
             e.printStackTrace();
         }
         String send_json = userObject.toString();
-
         Log.i(TAG,send_json);
+        return send_json;
+    }
+
+    @Override
+    protected void onPreExecute(){
+//        this.dialog.show(activity, "Registering", "Please wait...");
+    }
+
+    @Override
+    protected Void doInBackground(Void... params) {
+        DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+        HttpPost httppost = new HttpPost(URL);
+        Log.i(TAG, URL);
 
         StringEntity en = null;
         try {
-            en = new StringEntity(send_json);
+            en = new StringEntity(createJsonString());
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
         httppost.setEntity(en);
-
         httppost.setHeader("Content-type", "application/json");
+
         InputStream inputstream = null;
         try {
             HttpResponse response = httpclient.execute(httppost);
@@ -95,20 +107,13 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
                 sb.append(line + "\n");
             }
             jsonstring = sb.toString();
-
-                JSONObject jObject = new JSONObject(jsonstring);
-                JSONObject userDetails = jObject.getJSONObject("data");
-
-                Log.i(TAG,userDetails.toString());
-
-                get_auth_token(userDetails);
-
+//
+//                JSONObject jObject = new JSONObject(jsonstring);
+//                JSONObject userDetails = jObject.getJSONObject("data");
 
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
             e.printStackTrace();
         }
         return null;
@@ -120,20 +125,34 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
 //            this.dialog.dismiss();
 //        this.dialog.setCancelable(true);
 
+        try {
+            get_auth_token();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         Toast.makeText(activity, "Register Successful", Toast.LENGTH_SHORT).show();
         this.login.dismiss();
     }
 
-    protected void get_auth_token(JSONObject userdetails) throws JSONException {
-        GlobalVar.setUserToken(userdetails.getString("authentication_token"));
-        GlobalVar.setUserName(userdetails.getString("username"));
-        GlobalVar.setUserEmail(userdetails.getString("email"));
+    protected void get_auth_token() throws JSONException {
 
-        SharedPreferences settings_sp = context.getSharedPreferences(GlobalVar.getSharedPreferenceName(), Context.MODE_PRIVATE);
+        JSONObject jObject = new JSONObject(jsonstring);
+        JSONObject userDetails = jObject.getJSONObject("data");
+
+        Log.i(TAG, userDetails.toString());
+
+        GlobalVar.setUserToken(userDetails.getString("authentication_token"));
+        GlobalVar.setUserName(userDetails.getString("username"));
+        GlobalVar.setUserEmail(userDetails.getString("email"));
+
+        SharedPreferences settings_sp = activity.getSharedPreferences(GlobalVar.getSharedPreferenceName(), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = settings_sp.edit();
         editor.putString("USERNAME", GlobalVar.getUserName());
         editor.putString("EMAIL", GlobalVar.getUserEmail());
         editor.putString("AUTH_TOKEN", GlobalVar.getUserToken());
+        editor.putBoolean("LOGGED_IN", true);
+        editor.putBoolean("REGISTER", true);
         editor.commit();
 
         Log.i(TAG, GlobalVar.getUserToken());

@@ -4,7 +4,9 @@ import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -30,14 +32,11 @@ public class MainActivity extends ActionBarActivity {
     public static final String TAG = MainActivity.class.getSimpleName();
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
-    private String[] osArray =  { "Current Location", "Ad Location", "Settings", "Login", "Exit" };
+    private String[] NavArray =  { "Current Location", "Ad Location", "Settings", "Register", "Exit" };
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
-
-    public String AUTH_TOKEN;
-    public String EMAIL_ID;
-    public String CURRENT_USER;
+    private SessionManager mSessionManager;
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
@@ -49,9 +48,13 @@ public class MainActivity extends ActionBarActivity {
             if (savedInstanceState != null) {
                 return;
             }
+            mSessionManager = new SessionManager(getApplicationContext());
+            mSessionManager.get_logged();
+            mSessionManager.get_registered();
+            mSessionManager.set_session();
 
             create_fragments(new Map_Fragment(100));
-            startService(new Intent(this,NotificationService.class));
+ //         startService(new Intent(this,NotificationService.class));
 
             /** navigational drawer **/
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -59,8 +62,11 @@ public class MainActivity extends ActionBarActivity {
             mDrawerList = (ListView) findViewById(R.id.left_drawer);
             mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
             mActivityTitle = getTitle().toString();
-            mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
-            mDrawerList.setAdapter(mAdapter);
+            user_status();
+
+//            mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, NavArray);
+//            mDrawerList.setAdapter(mAdapter);
+
             mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
             mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                     R.string.drawer_open, R.string.drawer_close) {
@@ -104,6 +110,18 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    private void user_status(){
+        if(GlobalVar.getLoggedIn() && GlobalVar.getRegister())
+            NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Logout"};
+        else if (GlobalVar.getRegister())
+            NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Login"};
+        else
+            NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Register"};
+
+        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, NavArray);
+        mDrawerList.setAdapter(mAdapter);
+    }
+
     private void selectItem(int position) {
 
         switch (position) {
@@ -117,7 +135,12 @@ public class MainActivity extends ActionBarActivity {
                 create_fragments(new SettingsFragment(this));
                 break;
             case 3:
-                create_login_dialog();
+                if(GlobalVar.getLoggedIn() && GlobalVar.getRegister())
+                    create_logout_dialog();
+                else if (GlobalVar.getRegister())
+                    create_login_dialog();
+                else
+                    create_register_dialog();
                 break;
            default:
                break;
@@ -125,38 +148,70 @@ public class MainActivity extends ActionBarActivity {
 
         mDrawerList.setItemChecked(position, true);
         mDrawerList.setSelection(position);
-        setTitle(osArray[position]);
+        setTitle(NavArray[position]);
         mDrawerLayout.closeDrawer(mDrawerList);
 
     }
 
-    private void create_login_dialog() {
+    private void create_logout_dialog(){
 
-        // Create Object of Dialog class
+    }
+
+    private void create_login_dialog(){
+
         final Dialog login = new Dialog(this);
-        // Set GUI of login screen
+
         login.setContentView(R.layout.login_dialog);
         login.getWindow().setBackgroundDrawable(new ColorDrawable(android.R.color.transparent));
 
-        // Init button of login GUI
-        Button btnLogin = (Button) login.findViewById(R.id.btnLogin);
-        Button btnCancel = (Button) login.findViewById(R.id.btnCancel);
-        final EditText txtEmail = (EditText)login.findViewById(R.id.txtEmail);
-        final EditText txtPassword = (EditText)login.findViewById(R.id.txtPassword);
-        final EditText txtUsername = (EditText)login.findViewById(R.id.txtUsername);
+        Button btnLogin = (Button) login.findViewById(R.id.btnSingIn);
+        final EditText txtPassword = (EditText)login.findViewById(R.id.etUserName);
+        final EditText txtUsername = (EditText)login.findViewById(R.id.etPass);
 
-        // Attached listener for login GUI button
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(txtEmail.getText().toString().trim().length() > 0 && txtPassword.getText().toString().trim().length() > 0)
+                if(txtUsername.getText().toString().trim().length() > 0 && txtPassword.getText().toString().trim().length() > 0)
+                {
+                    String password = txtPassword.getText().toString();
+                    String username = txtUsername.getText().toString();
+
+                    AsyncTask<Void, Void, Void> AuthenticatorTasker_object;
+                    AuthenticatorTasker_object = new AuthenticatorTasker(password,username,login,getApplicationContext(),MainActivity.this).execute();
+                }
+                else
+                {
+                    Toast.makeText(MainActivity.this, "Enter Username and Password", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+        login.show();
+    }
+
+    private void create_register_dialog() {
+
+        final Dialog register = new Dialog(this);
+
+        register.setContentView(R.layout.register_dialog);
+        register.getWindow().setBackgroundDrawable(new ColorDrawable(android.R.color.transparent));
+
+        Button btnLogin = (Button) register.findViewById(R.id.btnSingIn);
+//        Button btnCancel = (Button) login.findViewById(R.id.btnCancel);
+        final EditText txtEmail = (EditText)register.findViewById(R.id.etEmail);
+        final EditText txtPassword = (EditText)register.findViewById(R.id.etPass);
+        final EditText txtUsername = (EditText)register.findViewById(R.id.etUserName);
+
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(txtUsername.getText().toString().trim().length() > 0 && txtEmail.getText().toString().trim().length() > 0 && txtPassword.getText().toString().trim().length() > 0)
                 {
                     String email = txtEmail.getText().toString();
                     String password = txtPassword.getText().toString();
                     String username = txtUsername.getText().toString();
 
                     AsyncTask<Void, Void, Void> AuthenticatorTasker_object;
-                    AuthenticatorTasker_object = new AuthenticatorTasker(email,password,username,login,getApplicationContext(),MainActivity.this).execute();
+                    AuthenticatorTasker_object = new AuthenticatorTasker(email,password,username,register,getApplicationContext(),MainActivity.this).execute();
                 }
                 else
                 {
@@ -164,14 +219,15 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         });
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                login.dismiss();
-            }
-        });
 
-        login.show();
+//        btnCancel.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                login.dismiss();
+//            }
+//        });
+
+        register.show();
 
     }
 

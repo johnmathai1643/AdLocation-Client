@@ -39,83 +39,37 @@
         android:src="@drawable/adlocation_logo"
         android:layout_gravity="center_horizontal" />
 
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:layout_below="@+id/imgLogo"
-        android:paddingLeft="15dp"
-        android:text="AdLocations"
-        android:textAlignment="center"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#000"
-        android:textSize="25sp"
-        android:typeface="serif"
-        android:layout_gravity="center_horizontal" />
-
     <EditText
-        android:id="@+id/txtEmail"
+        android:id="@+id/etUserName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="Email Address"
-        android:layout_marginRight="15dp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="20dp"
-        android:textColor="#000"
-        android:textSize="20dp"
-        android:inputType="textEmailAddress" >
-        <requestFocus />
-    </EditText>
-
+        android:background="@drawable/edittext_default_bg"
+        android:layout_marginTop="-2dp"
+        android:padding="10dp"
+        android:hint="User Name"
+        android:textColorHint="#bbbbbb"
+        />
     <EditText
-        android:id="@+id/txtUsername"
+        android:id="@+id/etPass"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="Username"
-        android:layout_marginRight="15dp"
-        android:layout_marginLeft="15dp"
-        android:textColor="#000"
-        android:textSize="20dp" />
-
-    <EditText
-        android:id="@+id/txtPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
+        android:background="@drawable/edittext_bottom_bg"
+        android:layout_marginTop="-2dp"
+        android:padding="10dp"
         android:hint="Password"
-        android:layout_marginRight="15dp"
-        android:layout_marginLeft="15dp"
-        android:textColor="#000"
-        android:textSize="20dp"
-        android:inputType="textPassword" />
-
+        android:textColorHint="#bbbbbb"
+        android:password="true"
+        />
     <Button
-        android:id="@+id/btnLogin"
-        android:layout_width="fill_parent"
-        android:layout_height="40dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginRight="15dp"
-        android:layout_marginLeft="15dp"
-        android:textColor="#fff"
-        android:background="#f44336"
-        android:textStyle="bold"
-        android:text="Register" />
-
-    <Button
-        android:id="@+id/btnCancel"
-        android:layout_width="fill_parent"
-        android:layout_height="40dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginRight="15dp"
-        android:layout_marginLeft="15dp"
-        android:background="#f44336"
-        android:textColor="#fff"
-        android:textStyle="bold"
-        android:text="Cancel" />
+        android:id="@+id/btnSingIn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_margin="4dp"
+        android:text="Sign Up"
+        style="@style/DefaultButtonText"
+        android:background="@drawable/button_default_bg"
+        />
 
 </LinearLayout>
 

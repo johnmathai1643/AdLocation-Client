@@ -159,64 +159,76 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
     }
 
     protected void output_ad_locations(JSONArray jsonArray){
-        try {
-            for (int i = 0; i<jsonArray.length();i++) {
-                JSONObject adlocation = jsonArray.getJSONObject(i);
-                map.addMarker(new MarkerOptions()
-                                .title(adlocation.getString("name"))
-                                .snippet(adlocation.getString("snippet"))
-                                .position(new LatLng(Double.parseDouble(adlocation.getString("lat")), Double.parseDouble(adlocation.getString("lon"))))
-                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                ).setDraggable(true);
-            }
+       if (jsonArray != null) {
+           try {
+               for (int i = 0; i < jsonArray.length(); i++) {
+                   JSONObject adlocation = jsonArray.getJSONObject(i);
+                   map.addMarker(new MarkerOptions()
+                                   .title(adlocation.getString("name"))
+                                   .snippet(adlocation.getString("snippet"))
+                                   .position(new LatLng(Double.parseDouble(adlocation.getString("lat")), Double.parseDouble(adlocation.getString("lon"))))
+                                   .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                   ).setDraggable(true);
+               }
 
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 12));
-            map.animateCamera(CameraUpdateFactory.zoomTo(12), 2000, null);
-            dataFromAsyncTask = null;
+               map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 12));
+               map.animateCamera(CameraUpdateFactory.zoomTo(12), 2000, null);
+               dataFromAsyncTask = null;
 
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+           } catch (JSONException e) {
+               e.printStackTrace();
+           }
+       }
+        else
+           Toast.makeText(getActivity(),"No Ads found near your location",Toast.LENGTH_LONG).show();
     }
 
     private JSONObject get_ad_location_sync(){
        if(mNetworkConnection.internet_connection()) {
-           String jsonstring;
-           double currentLatitude = LOCATION_CURRENT.getLatitude();
-           double currentLongitude = LOCATION_CURRENT.getLongitude();
+         if(GlobalVar.getUserEmail()!=null && GlobalVar.getUserToken()!=null) {
+             String jsonstring;
+             double currentLatitude = LOCATION_CURRENT.getLatitude();
+             double currentLongitude = LOCATION_CURRENT.getLongitude();
 
-           String data_to_send = "lat=" + String.valueOf(currentLatitude) + "&lon=" + String.valueOf(currentLongitude);
-           DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
-           if (dataFromAsyncTask == null) {
-               HttpGet httpget = new HttpGet("http://stark-lake-4080.herokuapp.com/api/ads_manager?" + data_to_send);
-               Log.i(TAG, "http://stark-lake-4080.herokuapp.com/api/ads_manager?" + data_to_send);
-               httpget.setHeader("Content-type", "application/json");
-               InputStream inputstream = null;
-               try {
-                   HttpResponse response = httpclient.execute(httpget);
-                   HttpEntity entity = response.getEntity();
-                   inputstream = entity.getContent();
-                   BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream, "UTF-8"), 8);
-                   StringBuilder sb = new StringBuilder();
-                   String line = null;
-                   while ((line = reader.readLine()) != null) {
-                       sb.append(line + "\n");
-                   }
-                   jsonstring = sb.toString();
-                   JSONObject jObject = new JSONObject(jsonstring);
-                   Log.i(TAG, jsonstring);
+             String data_to_send = "lat=" + String.valueOf(currentLatitude) + "&lon=" + String.valueOf(currentLongitude);
+             DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+             if (dataFromAsyncTask == null) {
+                 HttpGet httpget = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/ads_manager?" + data_to_send);
+                 Log.i(TAG, "http://stormy-brook-6865.herokuapp.com/api/ads_manager?" + data_to_send);
 
-                   JSONArray jArray = jObject.getJSONArray("adlocation");
-                   dataFromAsyncTask = jArray;
+                 httpget.setHeader("Content-type", "application/json");
+                 httpget.addHeader("X-User-Email", GlobalVar.getUserEmail());
+                 httpget.addHeader("X-User-Token", GlobalVar.getUserToken());
+//                 Log.i(TAG, GlobalVar.getUserEmail());
 
-               } catch (ClientProtocolException e) {
-                   e.printStackTrace();
-               } catch (IOException e) {
-                   e.printStackTrace();
-               } catch (JSONException e) {
-                   e.printStackTrace();
-               }
-           }
+                 InputStream inputstream = null;
+                 try {
+                     HttpResponse response = httpclient.execute(httpget);
+                     HttpEntity entity = response.getEntity();
+                     inputstream = entity.getContent();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream, "UTF-8"), 8);
+                     StringBuilder sb = new StringBuilder();
+                     String line = null;
+                     while ((line = reader.readLine()) != null) {
+                         sb.append(line + "\n");
+                     }
+                     jsonstring = sb.toString();
+                     JSONObject jObject = new JSONObject(jsonstring);
+                     Log.i(TAG, jsonstring);
+
+                     JSONArray jArray = jObject.getJSONArray("adlocation");
+                     dataFromAsyncTask = jArray;
+
+                 } catch (ClientProtocolException e) {
+                     e.printStackTrace();
+                 } catch (IOException e) {
+                     e.printStackTrace();
+                 } catch (JSONException e) {
+                     e.printStackTrace();
+                 }
+             }
+
+         }
        }
        else{
            Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
