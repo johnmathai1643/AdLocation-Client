@@ -229,6 +229,8 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
              }
 
          }
+          else
+             Toast.makeText(getActivity(), "You are not logged in.", Toast.LENGTH_LONG).show();
        }
        else{
            Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();

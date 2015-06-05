@@ -17,7 +17,7 @@
             android:id="@+id/textView1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Sign up"
+            android:text="Logout"
             android:gravity="center"
             android:textColor="#000"
             android:layout_marginTop="20dp"
@@ -39,46 +39,36 @@
             android:src="@drawable/adlocation_logo"
             android:layout_gravity="center_horizontal" />
 
-        <EditText
-            android:id="@+id/etEmail"
+        <TextView
+            android:id="@+id/question"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/edittext_top_bg"
-            android:padding="10dp"
-            android:hint="Email"
-            android:textColorHint="#bbbbbb"
-            android:drawableLeft="@drawable/email"
-            />
-        <EditText
-            android:id="@+id/etUserName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/edittext_default_bg"
-            android:layout_marginTop="-2dp"
-            android:padding="10dp"
-            android:hint="User Name"
-            android:textColorHint="#bbbbbb"
-            android:drawableLeft="@drawable/user"
-            />
-        <EditText
-            android:id="@+id/etPass"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/edittext_bottom_bg"
-            android:layout_marginTop="-2dp"
-            android:padding="10dp"
-            android:hint="Password"
-            android:textColorHint="#bbbbbb"
-            android:password="true"
-            android:drawableLeft="@drawable/password"
-            />
+            android:text="Are you sure you want to log out?"
+            android:gravity="center"
+            android:textColor="#000"
+            android:layout_marginTop="20dp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
         <Button
-            android:id="@+id/btnSingIn"
+            android:id="@+id/btnYes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
             android:layout_margin="4dp"
-            android:text="Sign Up"
+            android:text="Logout"
+            style="@style/DefaultButtonText"
+            android:background="@drawable/button_default_bg"
+            />
+
+        <Button
+            android:id="@+id/btnNo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:layout_margin="4dp"
+            android:text="Cancel"
             style="@style/DefaultButtonText"
             android:background="@drawable/button_default_bg"
             />

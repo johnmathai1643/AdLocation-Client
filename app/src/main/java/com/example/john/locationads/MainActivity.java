@@ -59,10 +59,9 @@ public class MainActivity extends ActionBarActivity {
             /** navigational drawer **/
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
-            mDrawerList = (ListView) findViewById(R.id.left_drawer);
+            user_status();
             mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
             mActivityTitle = getTitle().toString();
-            user_status();
 
 //            mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, NavArray);
 //            mDrawerList.setAdapter(mAdapter);
@@ -75,6 +74,7 @@ public class MainActivity extends ActionBarActivity {
                  * Called when a drawer has settled in a completely open state.
                  */
                 public void onDrawerOpened(View drawerView) {
+                    user_status();
                     super.onDrawerOpened(drawerView);
                     getSupportActionBar().setTitle("Navigation!");
                     invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
@@ -95,6 +95,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        user_status();
     }
 
     @Override
@@ -119,7 +120,9 @@ public class MainActivity extends ActionBarActivity {
             NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Register"};
 
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, NavArray);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
         mDrawerList.setAdapter(mAdapter);
+        mAdapter.notifyDataSetChanged();
     }
 
     private void selectItem(int position) {
@@ -154,7 +157,38 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void create_logout_dialog(){
+        final Dialog logout = new Dialog(this);
 
+        logout.setContentView(R.layout.logout_dialog);
+        logout.getWindow().setBackgroundDrawable(new ColorDrawable(android.R.color.transparent));
+
+        Button btnLogout = (Button) logout.findViewById(R.id.btnYes);
+        Button btnCancel = (Button) logout.findViewById(R.id.btnNo);
+
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                SharedPreferences settings_sp = getApplicationContext().getSharedPreferences(GlobalVar.getSharedPreferenceName(), Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = settings_sp.edit();
+                editor.putString("AUTH_TOKEN", null);
+                editor.putBoolean("LOGGED_IN", false);
+                editor.commit();
+                GlobalVar.setUserToken(null);
+                GlobalVar.setLoggedIn(false);
+
+                Toast.makeText(MainActivity.this, "Logged out Successfully", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               logout.dismiss();
+            }
+        });
+
+        logout.show();
     }
 
     private void create_login_dialog(){
@@ -165,23 +199,23 @@ public class MainActivity extends ActionBarActivity {
         login.getWindow().setBackgroundDrawable(new ColorDrawable(android.R.color.transparent));
 
         Button btnLogin = (Button) login.findViewById(R.id.btnSingIn);
-        final EditText txtPassword = (EditText)login.findViewById(R.id.etUserName);
-        final EditText txtUsername = (EditText)login.findViewById(R.id.etPass);
+        final EditText txtPassword = (EditText)login.findViewById(R.id.etPass);
+        final EditText txtEmail = (EditText)login.findViewById(R.id.etEmail);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(txtUsername.getText().toString().trim().length() > 0 && txtPassword.getText().toString().trim().length() > 0)
+                if(txtEmail.getText().toString().trim().length() > 0 && txtPassword.getText().toString().trim().length() > 0)
                 {
                     String password = txtPassword.getText().toString();
-                    String username = txtUsername.getText().toString();
+                    String email = txtEmail.getText().toString();
 
                     AsyncTask<Void, Void, Void> AuthenticatorTasker_object;
-                    AuthenticatorTasker_object = new AuthenticatorTasker(password,username,login,getApplicationContext(),MainActivity.this).execute();
+                    AuthenticatorTasker_object = new AuthenticatorTasker(password,email,login,getApplicationContext(),MainActivity.this).execute();
                 }
                 else
                 {
-                    Toast.makeText(MainActivity.this, "Enter Username and Password", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "Enter Email and Password", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -219,13 +253,6 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         });
-
-//        btnCancel.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                login.dismiss();
-//            }
-//        });
 
         register.show();
 
@@ -269,4 +296,10 @@ public class MainActivity extends ActionBarActivity {
         return true;
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        user_status();
+        return true;
+    }
 }

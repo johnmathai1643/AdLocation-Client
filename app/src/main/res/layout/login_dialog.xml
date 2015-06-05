@@ -40,13 +40,13 @@
         android:layout_gravity="center_horizontal" />
 
     <EditText
-        android:id="@+id/etUserName"
+        android:id="@+id/etEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/edittext_default_bg"
         android:layout_marginTop="-2dp"
         android:padding="10dp"
-        android:hint="User Name"
+        android:hint="Email"
         android:textColorHint="#bbbbbb"
         />
     <EditText
