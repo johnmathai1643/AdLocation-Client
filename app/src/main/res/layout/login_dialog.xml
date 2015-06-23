@@ -17,7 +17,7 @@
         android:id="@+id/textView1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sign up"
+        android:text="Login"
         android:gravity="center"
         android:textColor="#000"
         android:layout_marginTop="20dp"
@@ -28,13 +28,15 @@
     <View
     android:layout_width="fill_parent"
     android:layout_height="2dp"
-    android:layout_marginBottom="10dp"
-    android:background="#C0C0C0"/>
+    android:layout_marginBottom="40dp"
+    android:background="#f44336"/>
 
     <ImageView
         android:id="@+id/imgLogo"
-        android:layout_width="125dp"
-        android:layout_height="125dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginBottom="50dp"
+        android:alpha="0.6"
         android:layout_centerInParent="true"
         android:src="@drawable/adlocation_logo"
         android:layout_gravity="center_horizontal" />
@@ -48,7 +50,8 @@
         android:padding="10dp"
         android:hint="Email"
         android:textColorHint="#bbbbbb"
-        />
+        android:drawableLeft="@drawable/password"/>
+
     <EditText
         android:id="@+id/etPass"
         android:layout_width="match_parent"
@@ -56,17 +59,20 @@
         android:background="@drawable/edittext_bottom_bg"
         android:layout_marginTop="-2dp"
         android:padding="10dp"
+        android:layout_marginBottom="20dp"
         android:hint="Password"
         android:textColorHint="#bbbbbb"
         android:password="true"
-        />
+        android:drawableLeft="@drawable/email"/>
+
     <Button
         android:id="@+id/btnSingIn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
         android:layout_margin="4dp"
-        android:text="Sign Up"
+        android:text="Login"
+        android:textColor="#fff"
         style="@style/DefaultButtonText"
         android:background="@drawable/button_default_bg"
         />

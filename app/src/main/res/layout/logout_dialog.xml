@@ -28,14 +28,15 @@
         <View
             android:layout_width="fill_parent"
             android:layout_height="2dp"
-            android:layout_marginBottom="10dp"
-            android:background="#C0C0C0"/>
+            android:layout_marginBottom="30dp"
+            android:background="#f44336"/>
 
         <ImageView
             android:id="@+id/imgLogo"
             android:layout_width="125dp"
             android:layout_height="125dp"
             android:layout_centerInParent="true"
+            android:alpha="0.6"
             android:src="@drawable/adlocation_logo"
             android:layout_gravity="center_horizontal" />
 
@@ -43,13 +44,13 @@
             android:id="@+id/question"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Are you sure you want to log out?"
+            android:text="All Services will be stopped.Are you sure you want to log out?"
             android:gravity="center"
             android:textColor="#000"
             android:layout_marginTop="20dp"
             android:textStyle="bold"
-            android:layout_marginBottom="20dp"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:layout_marginBottom="50dp"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <Button
             android:id="@+id/btnYes"
@@ -58,6 +59,7 @@
             android:padding="10dp"
             android:layout_margin="4dp"
             android:text="Logout"
+            android:textColor="#fff"
             style="@style/DefaultButtonText"
             android:background="@drawable/button_default_bg"
             />
@@ -69,6 +71,7 @@
             android:padding="10dp"
             android:layout_margin="4dp"
             android:text="Cancel"
+            android:textColor="#fff"
             style="@style/DefaultButtonText"
             android:background="@drawable/button_default_bg"
             />

@@ -5,7 +5,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -168,7 +167,6 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
             e.printStackTrace();
         }
 
-        Toast.makeText(activity, "Register Successful", Toast.LENGTH_SHORT).show();
         this.login.dismiss();
     }
 
@@ -183,6 +181,7 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
         else
             decider = null;
 
+        if(jsonstring!=null){
              JSONObject jObject = new JSONObject(jsonstring);
              JSONObject userDetails = jObject.getJSONObject(decider);
              Log.i(TAG, userDetails.toString());
@@ -198,7 +197,25 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
              editor.putBoolean("LOGGED_IN", true);
              editor.putBoolean("REGISTER", true);
              editor.commit();
-             Log.i(TAG, GlobalVar.getUserToken());
+
+            GlobalVar.setLoggedIn(true);
+            GlobalVar.setRegister(true);
+            SessionManager mSessionManager = new SessionManager(activity);
+            mSessionManager.set_session();
+
+            Log.i(TAG, GlobalVar.getUserToken());
+
+            if(this.type == "register")
+                Toast.makeText(activity, "Register Successful", Toast.LENGTH_SHORT).show();
+            else if(this.type == "login")
+                Toast.makeText(activity, "Logged in Successfully", Toast.LENGTH_LONG).show();
+
+        }else{
+            if (this.type == "register")
+                Toast.makeText(activity,"Register Failed",Toast.LENGTH_LONG);
+            else if (this.type == "login")
+                Toast.makeText(activity,"Login Failed",Toast.LENGTH_LONG);
+        }
     }
 
 }

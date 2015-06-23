@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
@@ -15,7 +14,6 @@ import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,9 +23,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.support.v7.widget.Toolbar;
 
-
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements FragmentDrawer.FragmentDrawerListener {
 
     public static final String TAG = MainActivity.class.getSimpleName();
     private ListView mDrawerList;
@@ -37,12 +35,23 @@ public class MainActivity extends ActionBarActivity {
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
     private SessionManager mSessionManager;
+    private Toolbar mToolbar;
+    private FragmentDrawer drawerFragment;
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        drawerFragment = (FragmentDrawer)
+                getSupportFragmentManager().findFragmentById(R.id.fragment_navigation_drawer);
+        drawerFragment.setUp(R.id.fragment_navigation_drawer, (DrawerLayout) findViewById(R.id.drawer_layout), mToolbar);
+        drawerFragment.setDrawerListener((FragmentDrawer.FragmentDrawerListener) this);
 
         if (findViewById(R.id.content_frame) != null) {
             if (savedInstanceState != null) {
@@ -56,40 +65,27 @@ public class MainActivity extends ActionBarActivity {
             create_fragments(new Map_Fragment(100));
  //         startService(new Intent(this,NotificationService.class));
 
-            /** navigational drawer **/
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setHomeButtonEnabled(true);
             user_status();
-            mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-            mActivityTitle = getTitle().toString();
 
-//            mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, NavArray);
-//            mDrawerList.setAdapter(mAdapter);
-
-            mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-            mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                    R.string.drawer_open, R.string.drawer_close) {
-
-                /**
-                 * Called when a drawer has settled in a completely open state.
-                 */
-                public void onDrawerOpened(View drawerView) {
-                    user_status();
-                    super.onDrawerOpened(drawerView);
-                    getSupportActionBar().setTitle("Navigation!");
-                    invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-                }
-
-                /**
-                 * Called when a drawer has settled in a completely closed state.
-                 */
-                public void onDrawerClosed(View view) {
-                    super.onDrawerClosed(view);
-                    getSupportActionBar().setTitle(mActivityTitle);
-                    invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-                }
-            };
         }
+    }
+    /** action menu function not implemented yet **/
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -101,6 +97,11 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    @Override
+    public void onDrawerItemSelected(View view, int position) {
+        selectItem(position);
     }
 
     /** navigation drawer listener swaps fragments in the main content view */
@@ -120,13 +121,13 @@ public class MainActivity extends ActionBarActivity {
             NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Register"};
 
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, NavArray);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        mDrawerList.setAdapter(mAdapter);
-        mAdapter.notifyDataSetChanged();
+//        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+//        mDrawerList.setAdapter(mAdapter);
+//        mAdapter.notifyDataSetChanged();
     }
 
     private void selectItem(int position) {
-
+        String title = getString(R.string.app_name);
         switch (position) {
             case 0:
                 create_fragments(new Map_Fragment(0));
@@ -140,7 +141,7 @@ public class MainActivity extends ActionBarActivity {
             case 3:
                 if(GlobalVar.getLoggedIn() && GlobalVar.getRegister())
                     create_logout_dialog();
-                else if (GlobalVar.getRegister())
+                else if (GlobalVar.getRegister() && GlobalVar.getLoggedIn() == false)
                     create_login_dialog();
                 else
                     create_register_dialog();
@@ -149,10 +150,7 @@ public class MainActivity extends ActionBarActivity {
                break;
            }
 
-        mDrawerList.setItemChecked(position, true);
-        mDrawerList.setSelection(position);
-        setTitle(NavArray[position]);
-        mDrawerLayout.closeDrawer(mDrawerList);
+        getSupportActionBar().setTitle(title);
 
     }
 
@@ -176,8 +174,11 @@ public class MainActivity extends ActionBarActivity {
                 editor.commit();
                 GlobalVar.setUserToken(null);
                 GlobalVar.setLoggedIn(false);
+                mSessionManager.set_session();
 
+                logout.dismiss();
                 Toast.makeText(MainActivity.this, "Logged out Successfully", Toast.LENGTH_LONG).show();
+
             }
         });
 
@@ -187,7 +188,6 @@ public class MainActivity extends ActionBarActivity {
                logout.dismiss();
             }
         });
-
         logout.show();
     }
 
@@ -271,35 +271,17 @@ public class MainActivity extends ActionBarActivity {
         mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
     }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        mDrawerToggle.syncState();
+//        mDrawerToggle.syncState();
     }
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
+//        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
-/** action menu function not implemented yet **/
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        user_status();
-        return true;
-    }
 }
