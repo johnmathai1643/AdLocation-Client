@@ -34,6 +34,7 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
     private Context context;
     private MainActivity activity;
     private String URL;
+    private DatabaseHandler db;
 
     public AuthenticatorTasker(String email, String password, String username, Dialog login, Context context, MainActivity activity){
         this.email = email;
@@ -205,11 +206,13 @@ public class AuthenticatorTasker extends AsyncTask<Void,Void,Void> {
 
             Log.i(TAG, GlobalVar.getUserToken());
 
-            if(this.type == "register")
+            if(this.type == "register") {
                 Toast.makeText(activity, "Register Successful", Toast.LENGTH_SHORT).show();
-            else if(this.type == "login")
+//                NodeManager mNodeManager = new NodeManager(Double.parseDouble(settings_sp.getString("CUR_LNG", null)),Double.parseDouble(settings_sp.getString("CUR_LAT", null)),0.00,0.00,1,System.currentTimeMillis(),System.currentTimeMillis());
+//                db.addNode(mNodeManager);
+            }
+                  else if(this.type == "login")
                 Toast.makeText(activity, "Logged in Successfully", Toast.LENGTH_LONG).show();
-
         }else{
             if (this.type == "register")
                 Toast.makeText(activity,"Register Failed",Toast.LENGTH_LONG);

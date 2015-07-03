@@ -2,10 +2,7 @@ package com.example.john.locationads;
 
 import android.location.Location;
 import android.os.AsyncTask;
-import android.support.v4.app.Fragment;
 import android.util.Log;
-
-import com.google.android.gms.maps.MapFragment;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -22,13 +19,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class LocationTasker extends AsyncTask<Void,Void,Void> {
+public class AdTasker extends AsyncTask<Void,Void,Void> {
 
     private static final String TAG = "data";
     private double currentLatitude;
     private double currentLongitude;
 
-    public LocationTasker(Location location) {
+    public AdTasker(Location location) {
         currentLatitude = location.getLatitude();
         currentLongitude = location.getLongitude();
     }
@@ -40,7 +37,7 @@ public class LocationTasker extends AsyncTask<Void,Void,Void> {
                 String data_to_send = "lat=" + String.valueOf(currentLatitude) + "&lon=" + String.valueOf(currentLongitude);
                 DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
                 HttpGet httpget = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
-                Log.i(TAG, "http://http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
+                Log.i(TAG, "http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
 
                 httpget.setHeader("Content-type", "application/json");
                 httpget.addHeader("X-User-Email", GlobalVar.getUserEmail());

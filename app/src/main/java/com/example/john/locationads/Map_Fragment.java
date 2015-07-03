@@ -75,13 +75,11 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
         MapsInitializer.initialize(this.getActivity());
         map.setOnMarkerDragListener(this);
 
-        mLocationProvider = new LocationProvider(getActivity(), this);
         mNetworkConnection = new NetworkConnection(getActivity());
+        mLocationProvider = new LocationProvider(getActivity(), this);
 
-/** start service implement later **/
-
+        /** start service implement later **/
         choose_map(CASE_NUM);
-
         return view;
     }
 
@@ -89,7 +87,7 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
 
         switch (position) {
             case 0:
-                handleNewLocation(LOCATION_CURRENT);
+                mLocationProvider = new LocationProvider(getActivity(), this);
                 break;
             case 1:
                 if(mNetworkConnection.internet_connection()) {
@@ -189,13 +187,12 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
              String data_to_send = "lat=" + String.valueOf(currentLatitude) + "&lon=" + String.valueOf(currentLongitude);
              DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
              if (dataFromAsyncTask == null) {
-                 HttpGet httpget = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/ads_manager?" + data_to_send);
-                 Log.i(TAG, "http://stormy-brook-6865.herokuapp.com/api/ads_manager?" + data_to_send);
+                 HttpGet httpget = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
+                 Log.i(TAG, "http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
 
                  httpget.setHeader("Content-type", "application/json");
                  httpget.addHeader("X-User-Email", GlobalVar.getUserEmail());
                  httpget.addHeader("X-User-Token", GlobalVar.getUserToken());
-//                 Log.i(TAG, GlobalVar.getUserEmail());
 
                  InputStream inputstream = null;
                  try {
@@ -243,10 +240,11 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
         Marker MyLocation = map.addMarker(new MarkerOptions().position(CurLocation).title("Current Location").snippet("This is your location"));
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 12));
         map.animateCamera(CameraUpdateFactory.zoomTo(12), 2000, null);
+        mLocationProvider.set_location_preference(location);
 
         if(mNetworkConnection.internet_connection()){
-           AsyncTask<Void, Void, Void> LocationTasker_object;
-           LocationTasker_object = new LocationTasker(location).execute();}
+           AsyncTask<Void, Void, Void> mAdTasker;
+           mAdTasker = new AdTasker(location).execute();}
         else
            Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
 

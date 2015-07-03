@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
@@ -14,6 +15,7 @@ import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,7 +25,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
-import android.support.v7.widget.Toolbar;
 
 public class MainActivity extends ActionBarActivity implements FragmentDrawer.FragmentDrawerListener {
 
@@ -44,27 +45,32 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (findViewById(R.id.content_frame) != null) {
+            if (savedInstanceState != null) {
+                return;
+            }
+
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         drawerFragment = (FragmentDrawer)
-                getSupportFragmentManager().findFragmentById(R.id.fragment_navigation_drawer);
+        getSupportFragmentManager().findFragmentById(R.id.fragment_navigation_drawer);
         drawerFragment.setUp(R.id.fragment_navigation_drawer, (DrawerLayout) findViewById(R.id.drawer_layout), mToolbar);
         drawerFragment.setDrawerListener((FragmentDrawer.FragmentDrawerListener) this);
 
-        if (findViewById(R.id.content_frame) != null) {
-            if (savedInstanceState != null) {
-                return;
-            }
             mSessionManager = new SessionManager(getApplicationContext());
             mSessionManager.get_logged();
             mSessionManager.get_registered();
             mSessionManager.set_session();
 
-            create_fragments(new Map_Fragment(100));
- //         startService(new Intent(this,NotificationService.class));
+//            startService(new Intent(this, SourceDestUpdater.class));
+            create_fragments(new Map_Fragment(0));
 
+            AsyncTask<Void, Void, Void> DirectionManager_object;
+            DirectionManager_object = new DirectionManager(getApplicationContext()).execute();
+
+            startService(new Intent(this,NotificationService.class));
             user_status();
 
         }
@@ -121,9 +127,6 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
             NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Register"};
 
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, NavArray);
-//        mDrawerList = (ListView) findViewById(R.id.left_drawer);
-//        mDrawerList.setAdapter(mAdapter);
-//        mAdapter.notifyDataSetChanged();
     }
 
     private void selectItem(int position) {

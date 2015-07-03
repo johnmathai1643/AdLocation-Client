@@ -3,7 +3,7 @@
     package="com.example.john.locationads" >
 
     <uses-sdk
-        android:minSdkVersion="14"
+        android:minSdkVersion="16"
         android:targetSdkVersion="21" />
 
     <permission
@@ -60,6 +60,7 @@
             </intent-filter>
         </receiver>
         <service android:name=".NotificationService" />
+        <service android:name=".SourceDestUpdater"/>
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyDm1YfyFLens7Hfxz403I7kd0hhy5D2wLo"

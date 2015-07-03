@@ -11,8 +11,6 @@ import android.widget.Toast;
 
 public class BootReceiver extends BroadcastReceiver{
 
-
-
     public void onReceive(Context context, Intent intent) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 

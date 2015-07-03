@@ -3,6 +3,7 @@ package com.example.john.locationads;
 import android.app.Activity;
 import android.content.Context;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,7 +19,6 @@ public class LocationProvider implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
-
 
 
     public abstract interface LocationCallback {
@@ -37,8 +37,7 @@ public class LocationProvider implements
     private Context mContext;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-
-    static public Location CURRENT_LOCATION_FROM_PROVIDER;
+    private Location mlocation;
 
     public LocationProvider(Context context, LocationCallback callback) {
         mGoogleApiClient = new GoogleApiClient.Builder(context)
@@ -76,11 +75,13 @@ public class LocationProvider implements
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (location == null) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            mlocation = location;
+            set_location_preference(location);
         }
         else {
             Map_Fragment.LOCATION_CURRENT = location;
-//            NotificationService.LOCATION_CURRENT = location;
-            CURRENT_LOCATION_FROM_PROVIDER = location;
+            mlocation = location;
+            set_location_preference(location);
             mLocationCallback.handleNewLocation(location);
         }
     }
@@ -122,6 +123,33 @@ public class LocationProvider implements
 
     @Override
     public void onLocationChanged(Location location) {
+        set_location_preference(location);
+        mlocation = location;
         mLocationCallback.handleNewLocation(location);
     }
+
+    public void set_location_preference(Location location){
+        SharedPreferences settings_sp = mContext.getSharedPreferences(GlobalVar.getSharedPreferenceName(), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings_sp.edit();
+        editor.putString("CUR_LAT", String.valueOf(location.getLatitude()));
+        editor.putString("CUR_LNG", String.valueOf(location.getLongitude()));
+        editor.commit();
+    }
+
+    public Location get_location_preference(){
+        Location mlocation = null;
+        SharedPreferences settings_sp = mContext.getSharedPreferences(GlobalVar.getSharedPreferenceName(), Context.MODE_PRIVATE);
+        mlocation.setLatitude(Double.parseDouble(settings_sp.getString("CUR_LAT", null)));
+        mlocation.setLongitude(Double.parseDouble(settings_sp.getString("CUR_LNG", null)));
+        return mlocation;
+    }
+
+    public Location get_location(){
+
+        if(mlocation != null)
+          return mlocation;
+        else
+          return null;
+    }
+
 }

@@ -7,14 +7,9 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -35,22 +30,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class NotificationService extends Service {
+public class NotificationService extends Service implements LocationProvider.LocationCallback{
 
-    public static final String TAG = MainActivity.class.getSimpleName();
-//    public static Location LOCATION_CURRENT;
-//    private LocationProvider mLocationProvider;
-//    private NetworkConnection mNetworkConnection;
+    public static final String TAG = "NotificationService";
+
     private NotificationManager mNotificationManager;
-    private LocationManager mLocationManager;
+    private LocationProvider mLocationProvider;
     private int notificationID = 100;
-    private Handler h;
+    private NetworkConnection mNetworkConnection;
     private PowerManager.WakeLock mWakeLock;
-    JSONArray returned_locations;
+    private String jsonstring = " ";
+    private JSONArray returned_locations;
+    private SessionManager mSessionManager;
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onCreate(){
+        super.onCreate();
+//        mLocationProvider = new LocationProvider(getApplicationContext(), this);
+//        mNetworkConnection = new NetworkConnection(getApplicationContext());
+        Log.w(TAG, "ScreenListenerService---OnCreate ");
     }
 
     protected void build_notify_ad_locations(JSONArray jsonArray){
@@ -112,25 +115,28 @@ public class NotificationService extends Service {
         }
 
         // do the actual work, in a separate thread
-//        new PollTask().execute();
-        mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-        LocationListener mLocationListener = new LocationListenerAds();
-        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,mLocationListener);
 
     }
 
-    private class PollTask extends AsyncTask<Void, Void, Void> {
-        public PollTask() {
+    @Override
+    public void handleNewLocation(Location location) {
+        new PollTask(location).execute();
+    }
 
+    private class PollTask extends AsyncTask<Void, Void, Void> {
+
+        private Location mlocation = null;
+
+        public PollTask() {
+        }
+
+        public PollTask(Location mlocation) {
+            this.mlocation = mlocation;
         }
 
         @Override
         protected Void doInBackground(Void... params){
-
-            mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-            LocationListener mLocationListener = new LocationListenerAds();
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,mLocationListener);
-
+            get_ad_location_sync(this.mlocation);
             return null;
         }
 
@@ -150,7 +156,8 @@ public class NotificationService extends Service {
         @Override
         protected void onPostExecute(Void result) {
             build_notify_ad_locations(returned_locations);
-            stopSelf();
+//            stopSelf();
+            mLocationProvider.connect();
         }
     }
 
@@ -160,6 +167,14 @@ public class NotificationService extends Service {
      */
     @Override
     public void onStart(Intent intent, int startId) {
+        mLocationProvider = new LocationProvider(getApplicationContext(), this);
+        mNetworkConnection = new NetworkConnection(getApplicationContext());
+
+        mSessionManager = new SessionManager(getApplicationContext());
+        mSessionManager.get_logged();
+        mSessionManager.get_registered();
+        mSessionManager.set_session();
+
         handleIntent(intent);
     }
 
@@ -170,8 +185,15 @@ public class NotificationService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         Toast.makeText(getApplicationContext(), "Service start", Toast.LENGTH_LONG).show();
+
+        mSessionManager = new SessionManager(getApplicationContext());
+        mSessionManager.get_logged();
+        mSessionManager.get_registered();
+        mSessionManager.set_session();
+
+        mLocationProvider = new LocationProvider(getApplicationContext(), this);
+        mNetworkConnection = new NetworkConnection(getApplicationContext());
         handleIntent(intent);
         return START_STICKY;
     }
@@ -186,84 +208,54 @@ public class NotificationService extends Service {
         mWakeLock.release();
     }
 
-    private class LocationListenerAds implements LocationListener {
-        @Override
-        public void onLocationChanged(final Location location) {
+    private JSONObject get_ad_location_sync(Location location) {
+        if (mNetworkConnection.internet_connection()) {
+            if(GlobalVar.getUserEmail()!=null && GlobalVar.getUserToken()!=null) {
+                String data_to_send = "lat=" + String.valueOf(location.getLatitude()) + "&lon=" + String.valueOf(location.getLongitude());
+                DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+                HttpGet httpget = new HttpGet("http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
+                Log.i(TAG, "http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager?" + data_to_send);
 
-            h = new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    super.handleMessage(msg);
-                    build_notify_ad_locations(returned_locations);
-                }
-            };
+                httpget.setHeader("Content-type", "application/json");
+                httpget.addHeader("X-User-Email", GlobalVar.getUserEmail());
+                httpget.addHeader("X-User-Token", GlobalVar.getUserToken());
 
-             Thread th = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        get_ad_location_sync(location);
-                        h.sendEmptyMessage(0);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                InputStream inputstream = null;
+                try {
+                    HttpResponse response = httpclient.execute(httpget);
+                    HttpEntity entity = response.getEntity();
+                    inputstream = entity.getContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream, "UTF-8"), 8);
+                    StringBuilder sb = new StringBuilder();
+                    String line = null;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line + "\n");
                     }
+                    jsonstring = sb.toString();
+                    JSONObject jObject = new JSONObject(jsonstring);
+                    Log.i(TAG, jsonstring);
+
+                    JSONArray jArray = jObject.getJSONArray("adlocation");
+                    returned_locations = jArray;
+
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            });
-            th.start();
+                return null;
+            } else
+                Log.i(TAG,"You are not logged in.");
+//                Toast.makeText(getApplicationContext(), "You are not logged in.", Toast.LENGTH_LONG).show();
+        } else {
+            Log.i(TAG,"No data connection found");
+//            Toast.makeText(getApplicationContext(), " No data connection found", Toast.LENGTH_LONG).show();
         }
 
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-
-        }
-    }
-
-    private JSONObject get_ad_location_sync(Location location){
-        String jsonstring;
-        double currentLatitude = 13;
-        double currentLongitude = 80;
-
-        String data_to_send = "lat="+String.valueOf(currentLatitude)+"&lon="+String.valueOf(currentLongitude);
-        DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
-        HttpGet httppost = new HttpGet("http://stark-lake-4080.herokuapp.com/api/ads_manager?"+data_to_send);
-        Log.i(TAG,"http://stark-lake-4080.herokuapp.com/api/ads_manager?"+data_to_send);
-        httppost.setHeader("Content-type", "application/json");
-        InputStream inputstream = null;
-        try {
-            HttpResponse response = httpclient.execute(httppost);
-            HttpEntity entity = response.getEntity();
-            inputstream = entity.getContent();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream,"UTF-8"),8);
-            StringBuilder sb = new StringBuilder();
-            String line = null;
-            while((line = reader.readLine())!=null){
-                sb.append(line + "\n");
-            }
-            jsonstring = sb.toString();
-            JSONObject jObject = new JSONObject(jsonstring);
-            Log.i(TAG,jsonstring);
-
-            JSONArray jArray = jObject.getJSONArray("adlocation");
-            returned_locations = jArray;
-
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
         return null;
     }
+
 
 }

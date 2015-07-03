@@ -1,6 +1,7 @@
 package com.example.john.locationads;
 
 import android.app.Application;
+import android.location.Location;
 
 public class GlobalVar extends Application {
 
@@ -8,7 +9,9 @@ public class GlobalVar extends Application {
     static private String email;
     static private String auth_token;
     static private Boolean LOGGED_IN,REGISTER;
+    static private Location LOCATION;
     private static final String SHAREDPREF_SETTINGS = "Settings";
+
 
     static public String getSharedPreferenceName() { return SHAREDPREF_SETTINGS; }
 
