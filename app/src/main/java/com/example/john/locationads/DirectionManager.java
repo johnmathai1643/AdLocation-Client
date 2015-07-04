@@ -102,7 +102,7 @@ public class DirectionManager extends AsyncTask<Void,Void,Void> {
                     db.addFreq(new FreqManager(1,start_location_Object.getDouble("lat"),start_location_Object.getDouble("lng"),end_location_Object.getDouble("lat"),end_location_Object.getDouble("lng"),1));
 
                 } catch (JSONException e) {
-                    // Oops
+                    e.printStackTrace();
                 }
             }
 

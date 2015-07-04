@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
@@ -64,13 +63,24 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
             mSessionManager.get_registered();
             mSessionManager.set_session();
 
-//            startService(new Intent(this, SourceDestUpdater.class));
-            create_fragments(new Map_Fragment(0));
+//              startService(new Intent(this, SourceDestUpdater.class));
+              create_fragments(new Map_Fragment(0));
 
-            AsyncTask<Void, Void, Void> DirectionManager_object;
-            DirectionManager_object = new DirectionManager(getApplicationContext()).execute();
+//            AsyncTask<Void, Void, Void> DirectionManager_object;
+//            DirectionManager_object = new DirectionManager(getApplicationContext()).execute();
 
-            startService(new Intent(this,NotificationService.class));
+//            startService(new Intent(this,NotificationService.class));
+
+//            Intent myIntent = new Intent(this, SourceDestUpdater.class);
+//            PendingIntent pendingIntent = PendingIntent.getService(this, 0, myIntent, 0);
+//
+//            AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+//
+//            Calendar calendar = Calendar.getInstance();
+//            calendar.setTimeInMillis(System.currentTimeMillis());
+//            calendar.add(Calendar.SECOND, 10);
+//            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 5*1000, pendingIntent);
+
             user_status();
 
         }

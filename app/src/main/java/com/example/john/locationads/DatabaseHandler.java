@@ -6,11 +6,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.PointF;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseHandler extends SQLiteOpenHelper {
+    private static final String TAG = "DatabaseHandler";
 
     // Database Version
     private static final int DATABASE_VERSION = 1;
@@ -31,16 +33,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_FREQ = "freq";
 
     //node_manager column names
-    private static final String KEY_ID_NODE= "id";
-    private static final String KEY_SOURCE_LAT = "source_point_lat";
-    private static final String KEY_SOURCE_LON = "source_point_lon";
-    private static final String KEY_DEST_LAT = "dest_point_lat";
-    private static final String KEY_DEST_LON = "dest_point_lon";
+    private static final String KEY_ID_NODE = "id";
+    private static final String KEY_LAT = "lat";
+    private static final String KEY_LNG = "lng";
     private static final String KEY_FREQ_NODE = "freq";
-    private static final String KEY_SOURCE_TIME = "source_time";
-    private static final String KEY_DEST_TIME = "dest_time";
-    private static final String KEY_SOURCE_PLACE = "source_place";
-    private static final String KEY_DEST_PLACE = "dest_place";
+    private static final String KEY_PLACE = "place";
 
     private static final float RADIUS = 100;
 
@@ -52,8 +49,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String CREATE_FREQ_TABLE1 = "CREATE TABLE " + TABLE_FREQ + "(" + KEY_ID + " INTEGER PRIMARY KEY,"+ KEY_NODE_ID + " INTEGER," + KEY_START_LAT + " DOUBLE," + KEY_START_LON + " DOUBLE," + KEY_END_LAT + " DOUBLE," + KEY_END_LON + " DOUBLE," + KEY_FREQ + " INTEGER" + ")";
-        String CREATE_FREQ_TABLE2 = "CREATE TABLE " + TABLE_NODE + "(" + KEY_ID_NODE + " INTEGER PRIMARY KEY,"+ KEY_SOURCE_LAT + " DOUBLE," + KEY_SOURCE_LON + " DOUBLE," + KEY_DEST_LAT + " DOUBLE," + KEY_DEST_LON + " DOUBLE," + KEY_FREQ + " INTEGER" + KEY_SOURCE_TIME + " INTEGER" + KEY_DEST_TIME + " INTEGER" + KEY_SOURCE_PLACE + " TEXT" + KEY_DEST_PLACE + " TEXT" + ")";
-
+        String CREATE_FREQ_TABLE2 = "CREATE TABLE " + TABLE_NODE + "(" + KEY_ID_NODE + " INTEGER PRIMARY KEY,"+ KEY_LAT + " DOUBLE," + KEY_LNG + " DOUBLE," + KEY_FREQ + " INTEGER," +  KEY_PLACE + " TEXT" + ")";
         db.execSQL(CREATE_FREQ_TABLE1);
         db.execSQL(CREATE_FREQ_TABLE2);
     }
@@ -61,7 +57,17 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop older table if existed
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_FREQ + "," + TABLE_NODE);
+        db.execSQL("DROP TABLE IF EXISTS '" + TABLE_FREQ + "','" + TABLE_NODE + "'");
+        // Create tables again
+        onCreate(db);
+    }
+
+    public void onDrop(SQLiteDatabase db){
+        Log.i(TAG,"drop database");
+
+        db.execSQL("DROP TABLE IF EXISTS '" + TABLE_NODE + "'");
+        db.execSQL("DROP TABLE IF EXISTS '" + TABLE_FREQ + "'");
+
         // Create tables again
         onCreate(db);
     }
@@ -180,15 +186,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(KEY_SOURCE_LAT, mNodeManager.get_source_point_lat());
-        values.put(KEY_SOURCE_LON, mNodeManager.get_source_point_lon());
-        values.put(KEY_DEST_LAT, mNodeManager.get_dest_point_lat());
-        values.put(KEY_DEST_LON, mNodeManager.get_dest_point_lon());
+        values.put(KEY_LAT, mNodeManager.get_lat());
+        values.put(KEY_LNG, mNodeManager.get_lng());
         values.put(KEY_FREQ_NODE, mNodeManager.get_freq());
-        values.put(KEY_SOURCE_TIME, mNodeManager.get_source_time());
-        values.put(KEY_DEST_TIME, mNodeManager.get_dest_time());
-        values.put(KEY_SOURCE_PLACE, mNodeManager.get_source_place());
-        values.put(KEY_DEST_PLACE, mNodeManager.get_dest_place());
+        values.put(KEY_PLACE, mNodeManager.get_place());
 
         // Inserting Row
         db.insert(TABLE_NODE, null, values);
@@ -199,13 +200,26 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public NodeManager getNode(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = db.query(TABLE_NODE, new String[] { KEY_ID_NODE,KEY_SOURCE_LAT,KEY_SOURCE_LON,KEY_DEST_LAT,KEY_DEST_LON, KEY_FREQ_NODE, KEY_SOURCE_TIME, KEY_DEST_TIME, KEY_SOURCE_PLACE, KEY_DEST_PLACE}, KEY_ID_NODE + "=?",
+        Cursor cursor = db.query(TABLE_NODE, new String[] { KEY_ID_NODE,KEY_LAT,KEY_LNG,KEY_FREQ_NODE,KEY_PLACE}, KEY_ID_NODE + "=?",
                 new String[] { String.valueOf(id) }, null, null, null, null);
         if (cursor != null)
             cursor.moveToFirst();
 
-        NodeManager mNodeManager = new NodeManager(Integer.parseInt(cursor.getString(0)),
-                Double.parseDouble(cursor.getString(1)), Double.parseDouble(cursor.getString(2)),Double.parseDouble(cursor.getString(3)),Double.parseDouble(cursor.getString(4)), Integer.parseInt(cursor.getString(5)),Integer.parseInt(cursor.getString(6)),Integer.parseInt(cursor.getString(7)),cursor.getString(8),cursor.getString(9));
+        NodeManager mNodeManager = new NodeManager(Integer.parseInt(cursor.getString(0)),Double.parseDouble(cursor.getString(1)),Double.parseDouble(cursor.getString(2)),Integer.parseInt(cursor.getString(3)),cursor.getString(4));
+
+        return mNodeManager;
+    }
+
+
+    public NodeManager getNodebyPlace(String place) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(TABLE_NODE, new String[] { KEY_ID_NODE,KEY_LAT,KEY_LNG,KEY_FREQ_NODE,KEY_PLACE}, KEY_PLACE + "=?",
+                new String[] { place }, null, null, null, null);
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        NodeManager mNodeManager = new NodeManager(Integer.parseInt(cursor.getString(0)),Double.parseDouble(cursor.getString(1)),Double.parseDouble(cursor.getString(2)),Integer.parseInt(cursor.getString(3)),cursor.getString(4));
 
         return mNodeManager;
     }
@@ -222,15 +236,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(KEY_SOURCE_LAT, mNodeManager.get_source_point_lat());
-        values.put(KEY_SOURCE_LON, mNodeManager.get_source_point_lon());
-        values.put(KEY_DEST_LAT, mNodeManager.get_dest_point_lat());
-        values.put(KEY_DEST_LON, mNodeManager.get_dest_point_lon());
+        values.put(KEY_LAT, mNodeManager.get_lat());
+        values.put(KEY_LNG, mNodeManager.get_lng());
         values.put(KEY_FREQ_NODE, mNodeManager.get_freq());
-        values.put(KEY_SOURCE_TIME, mNodeManager.get_source_time());
-        values.put(KEY_DEST_TIME, mNodeManager.get_dest_time());
-        values.put(KEY_SOURCE_PLACE, mNodeManager.get_source_place());
-        values.put(KEY_DEST_PLACE, mNodeManager.get_dest_place());
+        values.put(KEY_PLACE, mNodeManager.get_place());
 
         // updating row
         return db.update(TABLE_NODE, values, KEY_ID_NODE + " = ?",
@@ -239,7 +248,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public boolean checkNode(String dbfield, String fieldValue) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String Query = "Select * from " + TABLE_NODE + " where " + dbfield + " = " + fieldValue;
+        String Query = "Select * from " + TABLE_NODE + " where " + dbfield + " = '" + fieldValue + "'";
         Cursor cursor = db.rawQuery(Query, null);
         if(cursor.getCount() <= 0){
             cursor.close();
@@ -315,16 +324,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         String selectQuery;
         if(type == "source"){
            selectQuery = "SELECT  * FROM " + TABLE_NODE + " WHERE "
-                + KEY_SOURCE_LAT + " > " + String.valueOf(p3.x) + " AND "
-                + KEY_SOURCE_LAT + " < " + String.valueOf(p1.x) + " AND "
-                + KEY_SOURCE_LON + " < " + String.valueOf(p2.y) + " AND "
-                + KEY_SOURCE_LON + " > " + String.valueOf(p4.y);}
+                + KEY_LAT + " > " + String.valueOf(p3.x) + " AND "
+                + KEY_LAT + " < " + String.valueOf(p1.x) + " AND "
+                + KEY_LNG + " < " + String.valueOf(p2.y) + " AND "
+                + KEY_LNG + " > " + String.valueOf(p4.y);}
         else{
            selectQuery = "SELECT  * FROM " + TABLE_NODE + " WHERE "
-                + KEY_DEST_LAT + " > " + String.valueOf(p3.x) + " AND "
-                + KEY_DEST_LAT + " < " + String.valueOf(p1.x) + " AND "
-                + KEY_DEST_LON + " < " + String.valueOf(p2.y) + " AND "
-                + KEY_DEST_LON + " > " + String.valueOf(p4.y);
+                + KEY_LAT + " > " + String.valueOf(p3.x) + " AND "
+                + KEY_LAT + " < " + String.valueOf(p1.x) + " AND "
+                + KEY_LNG + " < " + String.valueOf(p2.y) + " AND "
+                + KEY_LNG + " > " + String.valueOf(p4.y);
         }
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -335,20 +344,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             do {
                 NodeManager mNodeManager = new NodeManager();
                 mNodeManager.set_id(Integer.parseInt(cursor.getString(0)));
-                mNodeManager.set_source_point_lat(Double.parseDouble(cursor.getString(1)));
-                mNodeManager.set_source_point_lon(Double.parseDouble(cursor.getString(2)));
-                mNodeManager.set_dest_point_lat(Double.parseDouble(cursor.getString(3)));
-                mNodeManager.set_dest_point_lon(Double.parseDouble(cursor.getString(4)));
-                mNodeManager.set_freq(Integer.parseInt(cursor.getString(5)));
-                mNodeManager.set_source_time(Long.parseLong(cursor.getString(6)));
-                mNodeManager.set_dest_time(Long.parseLong(cursor.getString(7)));
+                mNodeManager.set_lat(Double.parseDouble(cursor.getString(1)));
+                mNodeManager.set_lng(Double.parseDouble(cursor.getString(2)));
+                mNodeManager.set_freq(Integer.parseInt(cursor.getString(3)));
+                mNodeManager.set_place(cursor.getString(4));
+
                 // Adding contact to list
                 NodeList.add(mNodeManager);
             } while (cursor.moveToNext());
         }
 
         for (int i = 0; i < NodeList.size(); i++)
-            if(pointIsInCircle(new PointF(Float.parseFloat(NodeList.get(i).get_source_point_lat().toString()),Float.parseFloat(NodeList.get(i).get_source_point_lon().toString())),center) == true){
+            if(pointIsInCircle(new PointF(Float.parseFloat(NodeList.get(i).get_lat().toString()),Float.parseFloat(NodeList.get(i).get_lng().toString())),center) == true){
                return NodeList.get(i);
             }
         return null;

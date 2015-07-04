@@ -21,7 +21,7 @@ import java.io.InputStreamReader;
 
 public class AdTasker extends AsyncTask<Void,Void,Void> {
 
-    private static final String TAG = "data";
+    private static final String TAG = "AdTasker";
     private double currentLatitude;
     private double currentLongitude;
 

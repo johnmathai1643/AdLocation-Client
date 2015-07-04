@@ -48,14 +48,6 @@ public class NotificationService extends Service implements LocationProvider.Loc
         return null;
     }
 
-    @Override
-    public void onCreate(){
-        super.onCreate();
-//        mLocationProvider = new LocationProvider(getApplicationContext(), this);
-//        mNetworkConnection = new NetworkConnection(getApplicationContext());
-        Log.w(TAG, "ScreenListenerService---OnCreate ");
-    }
-
     protected void build_notify_ad_locations(JSONArray jsonArray){
         String name=" ",snippet=" ";
 
