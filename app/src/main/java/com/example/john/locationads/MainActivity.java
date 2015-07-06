@@ -1,10 +1,13 @@
 package com.example.john.locationads;
 
 import android.annotation.TargetApi;
+import android.app.AlarmManager;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
@@ -24,6 +27,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import java.util.Calendar;
 
 public class MainActivity extends ActionBarActivity implements FragmentDrawer.FragmentDrawerListener {
 
@@ -63,7 +68,7 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
             mSessionManager.get_registered();
             mSessionManager.set_session();
 
-//              startService(new Intent(this, SourceDestUpdater.class));
+//              startService(new Intent(this, FrequencyUpdater.class));
               create_fragments(new Map_Fragment(0));
 
 //            AsyncTask<Void, Void, Void> DirectionManager_object;
@@ -71,20 +76,23 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
 
 //            startService(new Intent(this,NotificationService.class));
 
-//            Intent myIntent = new Intent(this, SourceDestUpdater.class);
-//            PendingIntent pendingIntent = PendingIntent.getService(this, 0, myIntent, 0);
-//
-//            AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
-//
-//            Calendar calendar = Calendar.getInstance();
-//            calendar.setTimeInMillis(System.currentTimeMillis());
-//            calendar.add(Calendar.SECOND, 10);
-//            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 5*1000, pendingIntent);
-
+//            start_NotificationManager_service();
             user_status();
 
         }
     }
+
+    private void start_NotificationManager_service(){
+            Intent myIntent = new Intent(this, FrequencyUpdater.class);
+            PendingIntent pendingIntent = PendingIntent.getService(this, 0, myIntent, 0);
+
+            AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            calendar.add(Calendar.SECOND, 20);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 5*1000, pendingIntent);
+    }
+
     /** action menu function not implemented yet **/
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

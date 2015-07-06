@@ -258,6 +258,31 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return true;
     }
 
+    public List<NodeManager> getHighestFrequency() {
+        List<NodeManager> nodeList = new ArrayList<NodeManager>();
+
+        String selectQuery = "SELECT  * FROM " + TABLE_NODE + " ORDER BY " + KEY_FREQ_NODE + " DESC LIMIT 2";
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                NodeManager mNodeManager = new NodeManager();
+                mNodeManager.set_id(Integer.parseInt(cursor.getString(0)));
+                mNodeManager.set_lat(Double.parseDouble(cursor.getString(1)));
+                mNodeManager.set_lng(Double.parseDouble(cursor.getString(2)));
+                mNodeManager.set_freq(Integer.parseInt(cursor.getString(3)));
+                mNodeManager.set_place(cursor.getString(4));
+
+                nodeList.add(mNodeManager);
+            } while (cursor.moveToNext());
+        }
+
+        // return contact list
+        return nodeList;
+    }
+
     public static PointF calculateDerivedPosition(PointF point,
                                                   double range, double bearing)
     {
