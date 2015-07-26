@@ -1,5 +1,7 @@
 package com.example.john.locationads;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -18,6 +20,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class AdTasker extends AsyncTask<Void,Void,Void> {
 
@@ -29,6 +33,22 @@ public class AdTasker extends AsyncTask<Void,Void,Void> {
         currentLatitude = location.getLatitude();
         currentLongitude = location.getLongitude();
     }
+
+    private Bitmap getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            return myBitmap;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
         String jsonstring = " ";
         public JSONArray returned_locations;
         @Override

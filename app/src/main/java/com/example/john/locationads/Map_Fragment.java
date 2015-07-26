@@ -3,8 +3,9 @@ package com.example.john.locationads;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -37,6 +38,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
 
 public class Map_Fragment extends Fragment implements LocationProvider.LocationCallback,GoogleMap.OnMarkerDragListener {
 
@@ -49,6 +53,7 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
     private ProgressDialog dialog;
     private Handler h;
     boolean markerClicked;
+    private ArrayList<Bitmap> bitmapArray = new ArrayList<Bitmap>();
 
     int CASE_NUM = 0;
 
@@ -160,9 +165,11 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
                    map.addMarker(new MarkerOptions()
                                    .title(adlocation.getString("name"))
                                    .snippet(adlocation.getString("snippet"))
-                                   .position(new LatLng(Double.parseDouble(adlocation.getString("lat")), Double.parseDouble(adlocation.getString("lon"))))
+                                   .position(new LatLng(Double.parseDouble(adlocation.getString("latitude")), Double.parseDouble(adlocation.getString("longitude"))))
                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                    ).setDraggable(true);
+
+                   map.setInfoWindowAdapter(new InfoWindowAdapterMarker(getActivity(),bitmapArray.get(i)));
                }
 
                map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 12));
@@ -175,6 +182,20 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
        }
         else
            Toast.makeText(getActivity(),"No Ads found near your location",Toast.LENGTH_LONG).show();
+    }
+
+    private void getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            bitmapArray.add(myBitmap);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private JSONObject get_ad_location_sync(){
@@ -212,6 +233,15 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
                      JSONArray jArray = jObject.getJSONArray("adlocation");
                      dataFromAsyncTask = jArray;
 
+                     jObject = new JSONObject(jsonstring);
+                     JSONArray jsonArray = jObject.getJSONArray("adlocation");
+
+                     for (int i = 0; i<jsonArray.length();i++) {
+                         JSONObject adlocation = jsonArray.getJSONObject(i);
+                         Log.i(TAG,"http://stormy-brook-6865.herokuapp.com/" + adlocation.getString("image"));
+                         getBitmapFromURL("http://stormy-brook-6865.herokuapp.com/" + adlocation.getString("image"));
+                     }
+
                  } catch (ClientProtocolException e) {
                      e.printStackTrace();
                  } catch (IOException e) {
@@ -241,12 +271,12 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 12));
         map.animateCamera(CameraUpdateFactory.zoomTo(12), 2000, null);
         mLocationProvider.set_location_preference(location);
-
-        if(mNetworkConnection.internet_connection()){
-           AsyncTask<Void, Void, Void> mAdTasker;
-           mAdTasker = new AdTasker(location).execute();}
-        else
-           Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
+//
+//        if(mNetworkConnection.internet_connection()){
+//           AsyncTask<Void, Void, Void> mAdTasker;
+//           mAdTasker = new AdTasker(location).execute();}
+//        else
+//           Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
 
     }
 

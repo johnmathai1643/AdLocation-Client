@@ -72,6 +72,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    public void onDrop_freqtable(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Log.i(TAG,"drop FREQ_TABLE");
+        db.execSQL("DROP TABLE IF EXISTS '" + TABLE_FREQ + "'");
+        String CREATE_FREQ_TABLE1 = "CREATE TABLE " + TABLE_FREQ + "(" + KEY_ID + " INTEGER PRIMARY KEY,"+ KEY_NODE_ID + " INTEGER," + KEY_START_LAT + " DOUBLE," + KEY_START_LON + " DOUBLE," + KEY_END_LAT + " DOUBLE," + KEY_END_LON + " DOUBLE," + KEY_FREQ + " INTEGER" + ")";
+        db.execSQL(CREATE_FREQ_TABLE1);
+    }
+
     //add new freq
     public void addFreq(FreqManager mFreqManager) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -279,7 +287,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
 
-        // return contact list
+        for (int i = 0; i < nodeList.size(); i++)
+               Log.i(TAG, String.valueOf(nodeList.get(i).get_lat()));
+
         return nodeList;
     }
 

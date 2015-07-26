@@ -6,6 +6,8 @@ import android.app.Service;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
@@ -19,6 +21,8 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
@@ -29,6 +33,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
 
 public class FrequencyUpdater extends Service implements LocationProvider.LocationCallback,ReverseGeocoderTasker.GeolocationCallBack{
 
@@ -44,6 +52,7 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
     private int notificationID = 100;
     private String jsonstring = " ";
     private JSONArray returned_locations;
+    private ArrayList<Bitmap> bitmapArray = new ArrayList<Bitmap>();
 
 
     public FrequencyUpdater(){
@@ -67,8 +76,14 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
 
     @Override
     public void handlegeolocation(String locality_name,Location location) {
-        location_frequency_updater(locality_name,location);
-        new PollTask(location).execute();
+        if(GlobalVar.getUserEmail()!=null && GlobalVar.getUserToken()!=null) {
+            location_frequency_updater(locality_name, location);
+            if (db.getHighestFrequency().size() == 2) {
+                new AdTasker_frequent_location().execute();
+            } else {
+                new AdTasker_single_location(location).execute();
+            }
+        }
     }
 
     private void handleIntent(Intent intent) {
@@ -144,14 +159,133 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
     }
 
 
-    private class PollTask extends AsyncTask<Void, Void, Void> {
+    private void getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            bitmapArray.add(myBitmap);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private class AdTasker_frequent_location extends AsyncTask<Void, Void, Void> {
+
+        private String adlocationString = null;
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            JSONArray location_params_Array = new JSONArray();
+
+            for (int i = 0; i < db.getAllFreq().size(); i++){
+                JSONObject location_params = new JSONObject();
+                try {
+                    location_params.put("latitude", db.getAllFreq().get(i).get_start_point_lat());
+                    location_params.put("longitude", db.getAllFreq().get(i).get_start_point_lon());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                location_params_Array.put(location_params);
+            }
+
+            JSONObject locationObject = new JSONObject();
+                    try {
+                        locationObject.put("location", location_params_Array);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    String send_json = locationObject.toString();
+                    Log.i(TAG, send_json);
+
+            DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+            HttpPost httppost = new HttpPost("http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager/get_frequent_ads");
+            Log.i(TAG,"http://stormy-brook-6865.herokuapp.com/api/v1/ads_manager/get_frequent_ads");
+
+            StringEntity en = null;
+            try {
+                en = new StringEntity(send_json);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            httppost.setEntity(en);
+            httppost.setHeader("Content-type", "application/json");
+            httppost.addHeader("X-User-Email", GlobalVar.getUserEmail());
+            httppost.addHeader("X-User-Token", GlobalVar.getUserToken());
+
+            InputStream inputstream = null;
+            try {
+                HttpResponse response = httpclient.execute(httppost);
+                HttpEntity entity = response.getEntity();
+                inputstream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream,"UTF-8"),8);
+                StringBuilder sb = new StringBuilder();
+                String line = null;
+                while((line = reader.readLine())!=null){
+                    sb.append(line + "\n");
+                }
+                adlocationString = sb.toString();
+                Log.i(TAG,adlocationString);
+                JSONObject jObject = new JSONObject(adlocationString);
+                JSONArray jsonArray = jObject.getJSONArray("adlocation");
+
+                    for (int i = 0; i<jsonArray.length();i++) {
+                        JSONObject adlocation = jsonArray.getJSONObject(i);
+                        Log.i(TAG,"http://stormy-brook-6865.herokuapp.com/" + adlocation.getString("image"));
+                        getBitmapFromURL("http://stormy-brook-6865.herokuapp.com/" + adlocation.getString("image"));
+                    }
+
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            if (GlobalVar.getRegister()&&GlobalVar.getLoggedIn()) {
+                JSONObject jObject = null;
+                try {
+                    jObject = new JSONObject(adlocationString);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                assert jObject != null;
+                JSONArray jArray = null;
+                try {
+                    jArray = jObject.getJSONArray("adlocation");
+                } catch (JSONException e) {
+                    Toast.makeText(getApplicationContext(), "No ads available", Toast.LENGTH_LONG);
+                }
+                returned_locations = jArray;
+
+                if (returned_locations.length() == 0) {
+                    Toast.makeText(getApplicationContext(), "No ads available", Toast.LENGTH_LONG);
+                } else
+                    build_notify_ad_locations(returned_locations);
+                //                 stopSelf();
+                mLocationProvider.connect();
+            }
+        }
+    }
+
+    private class AdTasker_single_location extends AsyncTask<Void, Void, Void> {
 
         private Location mlocation = null;
 
-        public PollTask() {
+        public AdTasker_single_location() {
         }
 
-        public PollTask(Location mlocation) {
+        public AdTasker_single_location(Location mlocation) {
             this.mlocation = mlocation;
         }
 
@@ -176,7 +310,8 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
 
         @Override
         protected void onPostExecute(Void result) {
-            build_notify_ad_locations(returned_locations);
+            if (GlobalVar.getRegister()&&GlobalVar.getLoggedIn())
+                build_notify_ad_locations(returned_locations);
 //            stopSelf();
             mLocationProvider.connect();
         }
@@ -203,12 +338,13 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
 
     protected void build_notify_ad_locations(JSONArray jsonArray){
         String name=" ",snippet=" ";
-
+        Bitmap icon = null;
         try {
             for (int i = 0; i<jsonArray.length();i++) {
                 JSONObject adlocation = jsonArray.getJSONObject(i);
                 name =  adlocation.getString("name");
                 snippet = adlocation.getString("snippet");
+                icon = bitmapArray.get(i);
             }
 
         } catch (JSONException e) {
@@ -218,12 +354,13 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
         Log.i("Start", "notification");
 
       /* Invoking the default notification service */
-        NotificationCompat.Builder  mBuilder = new NotificationCompat.Builder(getApplicationContext());
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
 
         mBuilder.setContentTitle(name);
         mBuilder.setContentText(snippet);
         mBuilder.setTicker("New Message Alert!");
         mBuilder.setSmallIcon(R.mipmap.location_ad_icon);
+        mBuilder.setLargeIcon(icon);
 
       /* Increase notification number every time a new notification arrives */
 //            mBuilder.setNumber(++numMessages);

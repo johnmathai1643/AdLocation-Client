@@ -68,15 +68,14 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
             mSessionManager.get_registered();
             mSessionManager.set_session();
 
-//              startService(new Intent(this, FrequencyUpdater.class));
+              AsyncTask<Void, Void, Void> DirectionManager_object;
+              DirectionManager_object = new DirectionManager(getApplicationContext()).execute();
+
+              startService(new Intent(this, FrequencyUpdater.class));
               create_fragments(new Map_Fragment(0));
 
-//            AsyncTask<Void, Void, Void> DirectionManager_object;
-//            DirectionManager_object = new DirectionManager(getApplicationContext()).execute();
-
-//            startService(new Intent(this,NotificationService.class));
-
 //            start_NotificationManager_service();
+
             user_status();
 
         }
