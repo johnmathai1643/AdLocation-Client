@@ -181,16 +181,38 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
 
             JSONArray location_params_Array = new JSONArray();
 
+            JSONObject location_params2 = new JSONObject();
+            JSONObject location_params3 = new JSONObject();
+
             for (int i = 0; i < db.getAllFreq().size(); i++){
-                JSONObject location_params = new JSONObject();
+                JSONObject location_params1 = new JSONObject();
                 try {
-                    location_params.put("latitude", db.getAllFreq().get(i).get_start_point_lat());
-                    location_params.put("longitude", db.getAllFreq().get(i).get_start_point_lon());
+                    Log.i(TAG, String.valueOf(db.getAllFreq().get(i).get_end_point_lat()));
+                    Log.i(TAG, String.valueOf(db.getAllFreq().get(i).get_end_point_lon()));
+
+                    location_params1.put("latitude", db.getAllFreq().get(i).get_end_point_lat());
+                    location_params1.put("longitude", db.getAllFreq().get(i).get_end_point_lon());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                location_params_Array.put(location_params);
+                location_params_Array.put(location_params1);
             }
+
+            try {
+                location_params2.put("latitude",10.7851298);
+                location_params2.put("longitude",78.7099467);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            location_params_Array.put(location_params2);
+
+            try {
+                location_params3.put("latitude",10.762448);
+                location_params3.put("longitude",78.811313);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            location_params_Array.put(location_params3);
 
             JSONObject locationObject = new JSONObject();
                     try {
@@ -235,8 +257,8 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
 
                     for (int i = 0; i<jsonArray.length();i++) {
                         JSONObject adlocation = jsonArray.getJSONObject(i);
-                        Log.i(TAG,"http://stormy-brook-6865.herokuapp.com/" + adlocation.getString("image"));
-                        getBitmapFromURL("http://stormy-brook-6865.herokuapp.com/" + adlocation.getString("image"));
+                        Log.i(TAG,"https://adlocation.s3.amazonaws.com/public/avatars/" + adlocation.getString("id") + "/thumb_" + adlocation.getString("avatar_file_name"));
+                        getBitmapFromURL("https://adlocation.s3.amazonaws.com/public/avatars/" + adlocation.getString("id") + "/thumb_" + adlocation.getString("avatar_file_name"));
                     }
 
             } catch (ClientProtocolException e) {
@@ -267,6 +289,7 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
                     Toast.makeText(getApplicationContext(), "No ads available", Toast.LENGTH_LONG);
                 }
                 returned_locations = jArray;
+                Map_Fragment.dataFromFreqUpater = returned_locations;
 
                 if (returned_locations.length() == 0) {
                     Toast.makeText(getApplicationContext(), "No ads available", Toast.LENGTH_LONG);
@@ -321,9 +344,12 @@ public class FrequencyUpdater extends Service implements LocationProvider.Locati
         Log.i(TAG,locality_name);
         Log.i(TAG, String.valueOf(location.getLatitude()));
 
+        db.addNode(new NodeManager(10.785876,78.720851,2000,"Water Tank Road, Railway Colony, Tiruchirappalli, Tamil Nadu 620004, India"));
+
         if (db.checkNode("place",locality_name) == true){
             mNodeManager = db.getNodebyPlace(locality_name);
             mNodeManager.set_freq(mNodeManager.get_freq()+1);
+            Log.i(TAG, String.valueOf(mNodeManager.get_freq()));
             db.updateNode(mNodeManager);
             Log.i(TAG,"Node present.... updating frequency");
         }

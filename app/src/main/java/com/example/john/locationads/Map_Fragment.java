@@ -46,6 +46,7 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
 
     public static JSONArray dataFromAsyncTask;
     public static Location LOCATION_CURRENT;
+    public static JSONArray dataFromFreqUpater;
     MapView mapView;
     GoogleMap map;
     public static final String TAG = MainActivity.class.getSimpleName();
@@ -126,6 +127,9 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
                 else
                     Toast.makeText(getActivity(), " No data connection found", Toast.LENGTH_LONG).show();
                 break;
+            case 2: FrequencyUpdater mFreqUp = new FrequencyUpdater();
+                    output_ad_locations(dataFromFreqUpater);
+                break;
             default:
                 break;
         }
@@ -169,7 +173,7 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                    ).setDraggable(true);
 
-                   map.setInfoWindowAdapter(new InfoWindowAdapterMarker(getActivity(),bitmapArray.get(i)));
+//                   map.setInfoWindowAdapter(new InfoWindowAdapterMarker(getActivity(),bitmapArray.get(i)));
                }
 
                map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurLocation, 12));
@@ -238,8 +242,8 @@ public class Map_Fragment extends Fragment implements LocationProvider.LocationC
 
                      for (int i = 0; i<jsonArray.length();i++) {
                          JSONObject adlocation = jsonArray.getJSONObject(i);
-                         Log.i(TAG,"http://stormy-brook-6865.herokuapp.com/" + adlocation.getString("image"));
-                         getBitmapFromURL("http://stormy-brook-6865.herokuapp.com/" + adlocation.getString("image"));
+                         Log.i(TAG,"https://adlocation.s3.amazonaws.com/public/avatars/" + adlocation.getString("id") + "/thumb_" + adlocation.getString("avatar_file_name"));
+                         getBitmapFromURL("https://adlocation.s3.amazonaws.com/public/avatars/" + adlocation.getString("id") + "/thumb_" + adlocation.getString("avatar_file_name"));
                      }
 
                  } catch (ClientProtocolException e) {

@@ -46,7 +46,8 @@ public class DirectionManager extends AsyncTask<Void,Void,Void> {
             nodeList = db.getHighestFrequency();
 
             if(nodeList != null && nodeList.size() == 2) {
-                String data_to_send = nodeList.get(0).get_lat() + "," + nodeList.get(0).get_lng() + "&destination=" + nodeList.get(1).get_lat() + "," + nodeList.get(1).get_lng() + "&sensor=false&mode=driving";
+//                String data_to_send = nodeList.get(0).get_lat() + "," + nodeList.get(0).get_lng() + "&destination=" + nodeList.get(1).get_lat() + "," + nodeList.get(1).get_lng() + "&sensor=false&mode=driving";
+                String data_to_send = nodeList.get(0).get_lat() + "," + nodeList.get(0).get_lng() + "&destination=10.762448,78.811313&sensor=false&mode=driving";
                 DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
                 HttpGet httpget = new HttpGet("http://maps.googleapis.com/maps/api/directions/json?origin="+data_to_send);
                 Log.i(TAG, "http://maps.googleapis.com/maps/api/directions/json?origin="+data_to_send);
@@ -98,15 +99,11 @@ public class DirectionManager extends AsyncTask<Void,Void,Void> {
                         JSONObject start_location_Object = oneObject.getJSONObject("start_location");
                         JSONObject end_location_Object = oneObject.getJSONObject("end_location");
 
-                        Log.i(TAG, String.valueOf(start_location_Object.getDouble("lat")));
-                        Log.i(TAG, start_location_Object.getString("lng"));
+//                        Log.i(TAG, start_location_Object.getString("lat"));
+//                        Log.i(TAG, start_location_Object.getString("lng"));
                         Log.i(TAG, end_location_Object.getString("lat"));
                         Log.i(TAG, end_location_Object.getString("lng"));
 
-                        /**
-                         * CRUD Operations
-                         * */
-                        // Inserting Contacts
                         Log.d("Insert: ", "Inserting ..");
                         db.addFreq(new FreqManager(1, start_location_Object.getDouble("lat"), start_location_Object.getDouble("lng"), end_location_Object.getDouble("lat"), end_location_Object.getDouble("lng"), 1));
 

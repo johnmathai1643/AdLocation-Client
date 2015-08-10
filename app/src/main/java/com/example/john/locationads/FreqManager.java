@@ -14,7 +14,7 @@ public class FreqManager {
 
     }
 
-    public FreqManager(int _id, int _node_id, Double _start_point_lat,Double _start_point_lon,Double _end_point_lon, Double _end_point_lat, int _freq){
+    public FreqManager(int _id, int _node_id, Double _start_point_lat,Double _start_point_lon,Double _end_point_lat,Double _end_point_lon, int _freq){
         this._id = _id;
         this._node_id = _id;
         this._start_point_lat = _start_point_lat;
@@ -25,7 +25,7 @@ public class FreqManager {
     }
 
 
-    public FreqManager(int _node_id, Double _start_point_lat,Double _start_point_lon,Double _end_point_lon, Double _end_point_lat, int _freq){
+    public FreqManager(int _node_id, Double _start_point_lat,Double _start_point_lon,Double _end_point_lat,Double _end_point_lon, int _freq){
         this._node_id = _id;
         this._start_point_lat = _start_point_lat;
         this._start_point_lon = _start_point_lon;

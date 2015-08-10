@@ -35,7 +35,7 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
     public static final String TAG = MainActivity.class.getSimpleName();
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
-    private String[] NavArray =  { "Current Location", "Ad Location", "Settings", "Register", "Exit" };
+    private String[] NavArray =  { "Current Location", "Ad Location", "Frequent Ad", "Settings", "Register", "Exit" };
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
@@ -137,11 +137,11 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
 
     private void user_status(){
         if(GlobalVar.getLoggedIn() && GlobalVar.getRegister())
-            NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Logout"};
+            NavArray = new String[]{"Current Location", "Ad Location", "Frequent Ads", "Settings", "Logout"};
         else if (GlobalVar.getRegister())
-            NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Login"};
+            NavArray = new String[]{"Current Location", "Ad Location", "Frequent Ads", "Settings", "Login"};
         else
-            NavArray = new String[]{"Current Location", "Ad Location", "Settings", "Register"};
+            NavArray = new String[]{"Current Location", "Ad Location", "Frequent Ads", "Settings", "Register"};
 
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, NavArray);
     }
@@ -156,9 +156,12 @@ public class MainActivity extends ActionBarActivity implements FragmentDrawer.Fr
                 create_fragments(new Map_Fragment(1));
                 break;
             case 2:
-                create_fragments(new SettingsFragment(this));
+                create_fragments(new Map_Fragment(2));
                 break;
             case 3:
+                create_fragments(new SettingsFragment(this));
+                break;
+            case 4:
                 if(GlobalVar.getLoggedIn() && GlobalVar.getRegister())
                     create_logout_dialog();
                 else if (GlobalVar.getRegister() && GlobalVar.getLoggedIn() == false)

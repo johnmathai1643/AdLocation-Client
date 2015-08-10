@@ -132,14 +132,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 mFreqManager.set_end_point_lat(Double.parseDouble(cursor.getString(4)));
                 mFreqManager.set_end_point_lon(Double.parseDouble(cursor.getString(5)));
                 mFreqManager.set_freq(Integer.parseInt(cursor.getString(6)));
-                // Adding contact to list
+
                 freqList.add(mFreqManager);
             } while (cursor.moveToNext());
         }
 
-        // return contact list
         return freqList;
-
     }
 
     // Getting contacts Count
